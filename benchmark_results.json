@@ -1,0 +1,54 @@
+{
+  "context": {
+    "date": "2021-08-03T17:55:02+02:00",
+    "host_name": "dominik-ubuntu-vm",
+    "executable": "cmake-build-release/src/lh_benchmarks",
+    "num_cpus": 4,
+    "mhz_per_cpu": 3400,
+    "cpu_scaling_enabled": false,
+    "caches": [
+      {
+        "type": "Data",
+        "level": 1,
+        "size": 32768,
+        "num_sharing": 1
+      },
+      {
+        "type": "Instruction",
+        "level": 1,
+        "size": 32768,
+        "num_sharing": 1
+      },
+      {
+        "type": "Unified",
+        "level": 2,
+        "size": 262144,
+        "num_sharing": 1
+      },
+      {
+        "type": "Unified",
+        "level": 3,
+        "size": 6291456,
+        "num_sharing": 1
+      }
+    ],
+    "load_avg": [1.23,1.36,0.98],
+    "library_build_type": "release"
+  },
+  "benchmarks": [
+    {
+      "name": "BM_LearnedHash",
+      "family_index": 0,
+      "per_family_instance_index": 0,
+      "run_name": "BM_LearnedHash",
+      "run_type": "iteration",
+      "repetitions": 1,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 1000000000,
+      "real_time": 9.6499934443272650e-07,
+      "cpu_time": 9.4599999999993301e-07,
+      "time_unit": "ns"
+    }
+  ]
+}
