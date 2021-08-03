@@ -1,6 +1,6 @@
 {
   "context": {
-    "date": "2021-08-03T18:20:46+02:00",
+    "date": "2021-08-03T20:45:17+02:00",
     "host_name": "dominik-ubuntu-vm",
     "executable": "cmake-build-release/src/lh_benchmarks",
     "num_cpus": 4,
@@ -32,7 +32,7 @@
         "num_sharing": 1
       }
     ],
-    "load_avg": [0.51,0.49,0.54],
+    "load_avg": [0.29,0.27,0.17],
     "library_build_type": "release"
   },
   "benchmarks": [
@@ -45,13 +45,30 @@
       "repetitions": 1,
       "repetition_index": 0,
       "threads": 1,
-      "iterations": 9939156,
-      "real_time": 6.7609673900158597e+01,
-      "cpu_time": 6.7522257423064900e+01,
+      "iterations": 9668145,
+      "real_time": 8.4499303433900693e+01,
+      "cpu_time": 8.2201708187041049e+01,
       "time_unit": "ns",
-      "bytes_per_second": 8.3443318332161766e+01,
-      "items_per_second": 1.0430414791520221e+01,
+      "bytes_per_second": 7.0463470482400496e+01,
+      "items_per_second": 8.8079338103000619e+00,
       "label": "pgm_hash_eps4_epsrec1"
+    },
+    {
+      "name": "BM_LearnedHash<learned_hashing::RadixSplineHash<std::uint64_t>>",
+      "family_index": 1,
+      "per_family_instance_index": 0,
+      "run_name": "BM_LearnedHash<learned_hashing::RadixSplineHash<std::uint64_t>>",
+      "run_type": "iteration",
+      "repetitions": 1,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 598159,
+      "real_time": 1.1436338097377372e+03,
+      "cpu_time": 1.1367127519605990e+03,
+      "time_unit": "ns",
+      "bytes_per_second": 8.2360818383154680e+01,
+      "items_per_second": 1.0295102297894335e+01,
+      "label": "radix_spline_err32_rbits18"
     }
   ]
 }

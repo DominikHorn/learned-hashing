@@ -24,5 +24,7 @@ static void BM_LearnedHash(benchmark::State& state) {
 
 BENCHMARK_TEMPLATE(BM_LearnedHash,
                    learned_hashing::PGMHash<std::uint64_t, 4, 1>);
+BENCHMARK_TEMPLATE(BM_LearnedHash,
+                   learned_hashing::RadixSplineHash<std::uint64_t>);
 
 BENCHMARK_MAIN();
