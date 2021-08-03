@@ -15,6 +15,19 @@ target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 # Make IDE friendly
 target_sources(${PROJECT_NAME} INTERFACE learned_hashing.hpp include/)
 
+# ==== Dependencies ====
+include(thirdparty/googlebenchmark.cmake)
+include(FetchContent)
+
+FetchContent_Declare(
+  pgm
+  GIT_REPOSITORY https://github.com/gvinciguerra/PGM-index.git
+  GIT_TAG master
+  )
+
+FetchContent_MakeAvailable(pgm)
+
+target_link_libraries(${PROJECT_NAME} INTERFACE pgmindexlib)
+
 # Benchmark code
-include(${PROJECT_SOURCE_DIR}/thirdparty/googlebenchmark.cmake)
 add_subdirectory(src)

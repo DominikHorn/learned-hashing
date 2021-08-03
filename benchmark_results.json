@@ -1,6 +1,6 @@
 {
   "context": {
-    "date": "2021-08-03T17:55:02+02:00",
+    "date": "2021-08-03T18:20:46+02:00",
     "host_name": "dominik-ubuntu-vm",
     "executable": "cmake-build-release/src/lh_benchmarks",
     "num_cpus": 4,
@@ -32,23 +32,26 @@
         "num_sharing": 1
       }
     ],
-    "load_avg": [1.23,1.36,0.98],
+    "load_avg": [0.51,0.49,0.54],
     "library_build_type": "release"
   },
   "benchmarks": [
     {
-      "name": "BM_LearnedHash",
+      "name": "BM_LearnedHash<learned_hashing::PGMHash<std::uint64_t, 4, 1>>",
       "family_index": 0,
       "per_family_instance_index": 0,
-      "run_name": "BM_LearnedHash",
+      "run_name": "BM_LearnedHash<learned_hashing::PGMHash<std::uint64_t, 4, 1>>",
       "run_type": "iteration",
       "repetitions": 1,
       "repetition_index": 0,
       "threads": 1,
-      "iterations": 1000000000,
-      "real_time": 9.6499934443272650e-07,
-      "cpu_time": 9.4599999999993301e-07,
-      "time_unit": "ns"
+      "iterations": 9939156,
+      "real_time": 6.7609673900158597e+01,
+      "cpu_time": 6.7522257423064900e+01,
+      "time_unit": "ns",
+      "bytes_per_second": 8.3443318332161766e+01,
+      "items_per_second": 1.0430414791520221e+01,
+      "label": "pgm_hash_eps4_epsrec1"
     }
   ]
 }

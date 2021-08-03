@@ -18,4 +18,4 @@ endif()
 
 # ==== Benchmark executable ====
 add_executable(lh_benchmarks benchmarks.cpp)
-target_link_libraries(lh_benchmarks PRIVATE ${GOOGLEBENCHMARK_LIBRARY})
+target_link_libraries(lh_benchmarks PRIVATE learned-hashing ${GOOGLEBENCHMARK_LIBRARY})
