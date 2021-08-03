@@ -26,5 +26,7 @@ BENCHMARK_TEMPLATE(BM_LearnedHash,
                    learned_hashing::PGMHash<std::uint64_t, 4, 1>);
 BENCHMARK_TEMPLATE(BM_LearnedHash,
                    learned_hashing::RadixSplineHash<std::uint64_t>);
+BENCHMARK_TEMPLATE(BM_LearnedHash,
+                   learned_hashing::RMIHash<std::uint64_t, 100>);
 
 BENCHMARK_MAIN();
