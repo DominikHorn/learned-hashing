@@ -23,7 +23,6 @@ endif()
 target_sources(${PROJECT_NAME} INTERFACE learned_hashing.hpp include/)
 
 # ==== Dependencies ====
-include(thirdparty/googlebenchmark.cmake)
 include(FetchContent)
 
 FetchContent_Declare(
@@ -41,4 +40,10 @@ FetchContent_MakeAvailable(pgm)
 target_link_libraries(${PROJECT_NAME} INTERFACE pgmindexlib)
 
 # Benchmark code
-add_subdirectory(src)
+get_directory_property(hasParent PARENT_DIRECTORY)
+if (NOT hasParent)
+  # ==== Dependencies ====
+  include(thirdparty/googlebenchmark.cmake)
+
+  add_subdirectory(src)
+endif()
