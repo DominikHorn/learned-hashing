@@ -25,6 +25,10 @@ FetchContent_Declare(
   GIT_TAG master
   )
 
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+set(BUILD_EXAMPLES OFF)
+set(BUILD_PGM_TUNER OFF)
+set(BUILD_PGM_BENCHMARK OFF)
 FetchContent_MakeAvailable(pgm)
 
 target_link_libraries(${PROJECT_NAME} INTERFACE pgmindexlib)
