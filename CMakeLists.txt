@@ -8,6 +8,7 @@ project("learned-hashing" VERSION 1.0
 # http://mariobadr.com/creating-a-header-only-library-with-cmake.html for more
 # info/install instructions
 add_library(${PROJECT_NAME} INTERFACE)
+target_sources(${PROJECT_NAME} INTERFACE learned_hashing.hpp include/)
 target_include_directories(${PROJECT_NAME} INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
@@ -18,9 +19,6 @@ check_cxx_compiler_flag(-fopenmp HAS_OPENMP)
 if (HAS_OPENMP)
   target_compile_options(${PROJECT_NAME} INTERFACE -fopenmp)
 endif()
-
-# Make IDE friendly
-target_sources(${PROJECT_NAME} INTERFACE learned_hashing.hpp include/)
 
 # ==== Dependencies ====
 include(FetchContent)
