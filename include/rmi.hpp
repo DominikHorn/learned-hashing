@@ -169,6 +169,11 @@ struct RMIHash {
     return "rmi_hash_" + std::to_string(SecondLevelModelCount);
   }
 
+  forceinline size_t byte_size() const {
+    return sizeof(decltype(this)) +
+           sizeof(SecondLevelModel) * SecondLevelModelCount;
+  }
+
   size_t model_count() { return 1 + SecondLevelModelCount; }
 
   /**
