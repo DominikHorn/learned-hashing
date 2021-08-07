@@ -83,12 +83,11 @@ struct LinearImpl {
   }
 };
 
-template <class Key, size_t SecondLevelModelCount,
-          class RootModel = LinearImpl<Key, double>,
-          class SecondLevelModel = LinearImpl<Key, double>>
+template <class Key, size_t SecondLevelModelCount, class Precision = double,
+          class RootModel = LinearImpl<Key, Precision>,
+          class SecondLevelModel = LinearImpl<Key, Precision>>
 struct RMIHash {
  private:
-  using Precision = double;
   using Datapoint = DatapointImpl<Key, Precision>;
 
   /// Root model
