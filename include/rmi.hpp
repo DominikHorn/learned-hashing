@@ -79,7 +79,7 @@ struct LinearImpl {
     // Therefore this optimization)
     if (unlikely(pred < 0)) return 0;
     if (unlikely(pred > max_value)) return max_value;
-    return static_cast<size_t>(pred);
+    return std::llround(pred);
   }
 };
 
