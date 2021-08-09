@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./build.sh lh_benchmarks DEBUG
+./build.sh lh_tests DEBUG
