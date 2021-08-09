@@ -120,8 +120,9 @@ struct RMIHash {
     std::vector<std::vector<Datapoint>> training_buckets(SecondLevelModelCount);
     const auto sample_size = std::distance(sample_begin, sample_end);
 
-    for (auto [it, i] = std::tuple{sample_begin, 0}; it < sample_end;
-         it++, i++) {
+    for (auto it = sample_begin; it < sample_end; it++) {
+      const auto i = std::distance(sample_begin, it);
+
       // Predict second level model using root model and put
       // sample datapoint into corresponding training bucket
       const auto key = *it;
