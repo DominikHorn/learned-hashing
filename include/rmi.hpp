@@ -115,6 +115,8 @@ class RMIHash {
             {Datapoint(*sample_begin, 0), Datapoint(*(sample_end - 1), 1)})),
         second_level_models(SecondLevelModelCount),
         full_size(full_size - 1) {
+    if (SecondLevelModelCount == 0) return;
+
     // Assign each sample point into a training bucket according to root model
     std::vector<std::vector<Datapoint>> training_buckets(SecondLevelModelCount);
     const auto sample_size = std::distance(sample_begin, sample_end);
@@ -183,6 +185,8 @@ class RMIHash {
    */
   template <class Result = size_t>
   forceinline Result operator()(const Key& key) const {
+    if (SecondLevelModelCount == 0) return root_model(key, full_size);
+
     const auto second_level_index = root_model(key, SecondLevelModelCount - 1);
     return second_level_models[second_level_index](key, full_size);
   }
