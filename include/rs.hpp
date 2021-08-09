@@ -18,7 +18,7 @@ struct RadixSplineHash {
                   const size_t full_size)
       // output \in [0, sample_size] -> multiply with (full_size / sample_size)
       : out_scale_fac(
-            static_cast<double>(full_size) /
+            static_cast<double>(full_size - 1) /
             static_cast<double>(std::distance(sample_begin, sample_end))) {
     const Data min = *sample_begin;
     const Data max = *(sample_end - 1);

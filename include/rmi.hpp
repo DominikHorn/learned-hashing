@@ -40,7 +40,7 @@ struct LinearImpl {
   static forceinline Precision compute_intercept(const Datapoint& min,
                                                  const Datapoint& max) {
     // f(min.x) = min.y <=> slope * min.x + intercept = min.y <=> intercept =
-    // min.y - slope * min_key
+    // min.y - slope * min.x
     return (min.y - compute_slope(min, max) * min.x);
   }
 
@@ -96,7 +96,7 @@ struct RMIHash {
   /// Second level models
   std::vector<SecondLevelModel> second_level_models;
 
-  /// output range is scaled from [0, 1] to [0, full_size]
+  /// output range is scaled from [0, 1] to [0, full_size)
   const size_t full_size;
 
  public:
@@ -105,7 +105,7 @@ struct RMIHash {
    * @tparam RandomIt
    * @param sample_begin
    * @param sample_end
-   * @param full_size operator() will extrapolate to [0, full_size]
+   * @param full_size operator() will extrapolate to [0, full_size)
    * @param models_per_layer
    * @param sample_size
    */
@@ -115,7 +115,7 @@ struct RMIHash {
       : root_model(RootModel(
             {Datapoint(*sample_begin, 0), Datapoint(*(sample_end - 1), 1)})),
         second_level_models(SecondLevelModelCount),
-        full_size(full_size) {
+        full_size(full_size - 1) {
     // Assign each sample point into a training bucket according to root model
     std::vector<std::vector<Datapoint>> training_buckets(SecondLevelModelCount);
     const auto sample_size = std::distance(sample_begin, sample_end);

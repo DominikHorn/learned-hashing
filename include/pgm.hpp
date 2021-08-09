@@ -34,7 +34,7 @@ struct PGMHash : public pgm::PGMIndex<T, Epsilon, EpsilonRecursive, Floating> {
       : Parent(sample_begin, sample_end),
         first_key(*sample_begin),
         sample_size(std::distance(sample_begin, sample_end)),
-        N(full_size) {
+        N(full_size - 1) {
     if (this->segments.size() > MaxModels) {
       throw std::runtime_error("PGM " + name() +
                                " had more models than allowed: " +
