@@ -93,9 +93,11 @@ class RMIHash {
   std::vector<SecondLevelModel> second_level_models;
 
   /// output range is scaled from [0, 1] to [0, full_size)
-  const size_t full_size;
+  const size_t full_size = 0;
 
  public:
+  RMIHash() = default;
+
   /**
    * Builds rmi on an already sorted (!) sample
    * @tparam RandomIt
