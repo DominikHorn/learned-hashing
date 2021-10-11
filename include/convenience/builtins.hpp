@@ -1,5 +1,13 @@
 #pragma once
 
+#undef forceinline
+#undef likely
+#undef unlikely
+#undef neverinline
+#undef packit
+#undef prefetch
+#undef full_mem_barrier
+
 #ifdef __GNUC__
 #ifdef NDEBUG
 #define forceinline inline __attribute__((always_inline))
