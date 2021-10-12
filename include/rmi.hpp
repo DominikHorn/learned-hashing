@@ -87,13 +87,13 @@ class RMIHash {
   using Datapoint = DatapointImpl<Key, Precision>;
 
   /// Root model
-  const RootModel root_model;
+  RootModel root_model;
 
   /// Second level models
   std::vector<SecondLevelModel> second_level_models;
 
   /// output range is scaled from [0, 1] to [0, full_size)
-  const size_t full_size = 0;
+  size_t full_size = 0;
 
  public:
   RMIHash() = default;
