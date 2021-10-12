@@ -73,7 +73,7 @@ struct LinearImpl {
   operator()(const Key& k, const Precision& max_value =
                                std::numeric_limits<Precision>::max()) const {
     // (slope * k + intercept) \in [0, 1] by construction
-    const auto pred = max_value * (slope * k + intercept) + 0.5;
+    const size_t pred = max_value * (slope * k + intercept) + 0.5;
     assert(pred >= 0);
     assert(pred <= max_value);
     return pred;
