@@ -148,6 +148,10 @@ class RMIHash {
   size_t full_size = 0;
 
  public:
+  /**
+   * Constructs an empty, untrained RMI. to train, manually
+   * train by invoking the train() function
+   */
   RMIHash() = default;
 
   /**
@@ -159,11 +163,28 @@ class RMIHash {
    */
   template <class RandomIt>
   RMIHash(const RandomIt& sample_begin, const RandomIt& sample_end,
-          const size_t full_size)
-      : root_model(RootModel(
-            {Datapoint(*sample_begin, 0), Datapoint(*(sample_end - 1), 1)})),
-        second_level_models(SecondLevelModelCount),
-        full_size(full_size - 1) {
+          const size_t full_size) {
+    train(sample_begin, sample_end, full_size);
+  }
+
+  /**
+   * trains rmi on an already sorted sample
+   *
+   * @tparam RandomIt
+   * @param sample_begin
+   * @param sample_end
+   * @param full_size operator() will extrapolate to [0, full_size)
+   */
+  template <class RandomIt>
+  void train(const RandomIt& sample_begin, const RandomIt& sample_end,
+             const size_t full_size) {
+    const size_t sample_size = std::distance(sample_begin, sample_end);
+    if (sample_size == 0) return;
+
+    root_model =
+        decltype(root_model)(sample_begin, sample_end, 0, sample_size - 1);
+    second_level_models = decltype(second_level_models)(SecondLevelModelCount);
+    this->full_size = full_size;
     if (SecondLevelModelCount == 0) return;
 
     if (FasterConstruction) {
@@ -203,7 +224,6 @@ class RMIHash {
       // Assign each sample point into a training bucket according to root model
       std::vector<std::vector<Datapoint>> training_buckets(
           SecondLevelModelCount);
-      const auto sample_size = std::distance(sample_begin, sample_end);
 
       for (auto it = sample_begin; it < sample_end; it++) {
         const auto i = std::distance(sample_begin, it);
