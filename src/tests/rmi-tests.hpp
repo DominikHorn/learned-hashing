@@ -7,6 +7,8 @@
 #include <tuple>
 #include <vector>
 
+#include "../support/datasets.hpp"
+
 template <class Data, size_t I = 0, typename... Tp>
 void iter_rmis(const std::tuple<Tp...>& t, const std::vector<Data>& dataset,
                const size_t dataset_size) {
@@ -14,7 +16,9 @@ void iter_rmis(const std::tuple<Tp...>& t, const std::vector<Data>& dataset,
     iter_rmis<Data, I + 1>(t, dataset, dataset_size);
 }
 
-// on sequential data, there mustn't be any collisions!
+// on sequential data, there mustn't be any collisions in theory.
+// However, floating point imprecisions lead to (few!) collisions
+// in practice
 TEST(RMI, NoCollisionsOnSequential) {
   using Data = std::uint64_t;
   for (const auto dataset_size : {1000, 10000, 1000000}) {
@@ -23,6 +27,7 @@ TEST(RMI, NoCollisionsOnSequential) {
 
     const learned_hashing::RMIHash<Data, 100> rmi(dataset.begin(),
                                                   dataset.end(), dataset_size);
+
     size_t incidents = 0;
     std::vector<bool> slot_occupied(dataset_size, false);
     for (size_t i = 0; i < dataset.size(); i++) {
@@ -35,5 +40,23 @@ TEST(RMI, NoCollisionsOnSequential) {
       slot_occupied[index] = true;
     }
     EXPECT_LE(incidents, dataset_size / 100);
+  }
+}
+
+TEST(RMI, ConstructionAlgorithmsMatch) {
+  using Data = std::uint64_t;
+
+  for (const auto dataset_size : {1000, 10000, 1000000}) {
+    for (const auto did : {dataset::ID::SEQUENTIAL, dataset::ID::UNIFORM,
+                           dataset::ID::UNIFORM, dataset::ID::GAPPED_10}) {
+      const auto dataset = dataset::load_cached(did, dataset_size);
+
+      const learned_hashing::RMIHash<Data, 10000, false> old_rmi(
+          dataset.begin(), dataset.end(), dataset_size);
+      const learned_hashing::RMIHash<Data, 10000, false> new_rmi(
+          dataset.begin(), dataset.end(), dataset_size);
+
+      EXPECT_EQ(old_rmi, new_rmi);
+    }
   }
 }
