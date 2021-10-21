@@ -52,7 +52,7 @@ TEST(RMI, ConstructionAlgorithmsMatch) {
       const auto dataset = dataset::load_cached(did, dataset_size);
 
       const learned_hashing::RMIHash<Data, 10000> old_rmi(
-          dataset.begin(), dataset.end(), dataset_size);
+          dataset.begin(), dataset.end(), dataset_size, false);
       const learned_hashing::RMIHash<Data, 10000> new_rmi(
           dataset.begin(), dataset.end(), dataset_size, true);
 

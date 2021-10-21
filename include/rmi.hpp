@@ -162,7 +162,7 @@ class RMIHash {
    */
   template <class RandomIt>
   RMIHash(const RandomIt& sample_begin, const RandomIt& sample_end,
-          const size_t full_size, bool faster_construction = false) {
+          const size_t full_size, bool faster_construction = true) {
     train(sample_begin, sample_end, full_size, faster_construction);
   }
 
@@ -176,7 +176,7 @@ class RMIHash {
    */
   template <class RandomIt>
   void train(const RandomIt& sample_begin, const RandomIt& sample_end,
-             const size_t full_size, bool faster_construction = false) {
+             const size_t full_size, bool faster_construction = true) {
     this->max_output = full_size - 1;
     const size_t sample_size = std::distance(sample_begin, sample_end);
     if (sample_size == 0) return;
