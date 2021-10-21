@@ -278,7 +278,7 @@ class RMIHash {
     return "rmi_hash_" + std::to_string(SecondLevelModelCount);
   }
 
-  forceinline size_t byte_size() const {
+  size_t byte_size() const {
     return sizeof(decltype(this)) +
            sizeof(SecondLevelModel) * SecondLevelModelCount;
   }

@@ -10,7 +10,7 @@
 namespace learned_hashing {
 template <class Data, const size_t NumRadixBits, const size_t MaxError,
           const size_t MaxModels>
-struct RadixSplineHash;
+class RadixSplineHash;
 
 namespace _rs {
 
@@ -113,7 +113,7 @@ class RadixSpline {
   friend class Serializer;
 
   template <class, size_t, size_t, size_t>
-  friend struct learned_hashing::RadixSplineHash;
+  friend class learned_hashing::RadixSplineHash;
 };
 
 }  // namespace _rs
