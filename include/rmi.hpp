@@ -199,7 +199,7 @@ class RMIHash {
         const auto current_second_level_index =
             root_model(key, second_level_models.size() - 1);
         assert(current_second_level_index >= 0);
-        assert(current_second_level_index < SecondLevelModelCount);
+        assert(current_second_level_index < second_level_models.size());
 
         // current bucket end
         size_t current_end = std::distance(sample_begin, it);
