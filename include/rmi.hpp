@@ -144,8 +144,8 @@ class RMIHash {
   /// Second level models
   std::vector<SecondLevelModel> second_level_models;
 
-  /// output range is scaled from [0, 1] to [0, full_size)
-  size_t full_size = 0;
+  /// output range is scaled from [0, 1] to [0, max_output] = [0, full_size)
+  size_t max_output = 0;
 
  public:
   /**
@@ -178,13 +178,13 @@ class RMIHash {
   template <class RandomIt>
   void train(const RandomIt& sample_begin, const RandomIt& sample_end,
              const size_t full_size) {
+    this->max_output = full_size - 1;
     const size_t sample_size = std::distance(sample_begin, sample_end);
     if (sample_size == 0) return;
 
     root_model =
         decltype(root_model)(sample_begin, sample_end, 0, sample_size - 1);
     second_level_models = decltype(second_level_models)(SecondLevelModelCount);
-    this->full_size = full_size;
     if (SecondLevelModelCount == 0) return;
 
     if (FasterConstruction) {
@@ -293,10 +293,10 @@ class RMIHash {
    */
   template <class Result = size_t>
   forceinline Result operator()(const Key& key) const {
-    if (SecondLevelModelCount == 0) return root_model(key, full_size);
+    if (SecondLevelModelCount == 0) return root_model(key, max_output);
 
     const auto second_level_index = root_model(key, SecondLevelModelCount - 1);
-    return second_level_models[second_level_index](key, full_size);
+    return second_level_models[second_level_index](key, max_output);
   }
 
   bool operator==(const RMIHash<Key, SecondLevelModelCount> other) const {
