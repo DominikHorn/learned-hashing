@@ -131,7 +131,7 @@ struct LinearImpl {
   }
 };
 
-template <class Key, size_t SecondLevelModelCount,
+template <class Key, size_t MaxSecondLevelModelCount,
           bool FasterConstruction = false, class Precision = double,
           class RootModel = LinearImpl<Key, Precision>,
           class SecondLevelModel = LinearImpl<Key, Precision>>
@@ -184,8 +184,11 @@ class RMIHash {
 
     root_model =
         decltype(root_model)(sample_begin, sample_end, 0, sample_size - 1);
-    second_level_models = decltype(second_level_models)(SecondLevelModelCount);
-    if (SecondLevelModelCount == 0) return;
+    if (MaxSecondLevelModelCount == 0) return;
+
+    // ensure that there are at least two datapoints per model on average
+    second_level_models = decltype(second_level_models)(
+        std::min(MaxSecondLevelModelCount, sample_size / 2));
 
     if (FasterConstruction) {
       size_t previous_end = 0, finished_end = 0, last_index = 0;
@@ -194,7 +197,7 @@ class RMIHash {
         // sample datapoint into corresponding training bucket
         const auto key = *it;
         const auto current_second_level_index =
-            root_model(key, SecondLevelModelCount - 1);
+            root_model(key, second_level_models.size() - 1);
         assert(current_second_level_index >= 0);
         assert(current_second_level_index < SecondLevelModelCount);
 
@@ -223,7 +226,7 @@ class RMIHash {
     } else {
       // Assign each sample point into a training bucket according to root model
       std::vector<std::vector<Datapoint>> training_buckets(
-          SecondLevelModelCount);
+          second_level_models.size());
 
       for (auto it = sample_begin; it < sample_end; it++) {
         const auto i = std::distance(sample_begin, it);
@@ -232,7 +235,7 @@ class RMIHash {
         // sample datapoint into corresponding training bucket
         const auto key = *it;
         const auto second_level_index =
-            root_model(key, SecondLevelModelCount - 1);
+            root_model(key, second_level_models.size() - 1);
         auto& bucket = training_buckets[second_level_index];
 
         // The following works because the previous training bucket has to be
@@ -255,7 +258,7 @@ class RMIHash {
                                    Datapoint(0, 0));
 
       // Train each second level model on its respective bucket
-      for (size_t model_idx = 0; model_idx < SecondLevelModelCount;
+      for (size_t model_idx = 0; model_idx < second_level_models.size();
            model_idx++) {
         auto& training_bucket = training_buckets[model_idx];
 
@@ -275,15 +278,15 @@ class RMIHash {
   }
 
   static std::string name() {
-    return "rmi_hash_" + std::to_string(SecondLevelModelCount);
+    return "rmi_hash_" + std::to_string(MaxSecondLevelModelCount);
   }
 
   size_t byte_size() const {
     return sizeof(decltype(this)) +
-           sizeof(SecondLevelModel) * SecondLevelModelCount;
+           sizeof(SecondLevelModel) * second_level_models.size();
   }
 
-  size_t model_count() { return 1 + SecondLevelModelCount; }
+  size_t model_count() { return 1 + second_level_models.size(); }
 
   /**
    * Compute hash value for key
@@ -293,15 +296,18 @@ class RMIHash {
    */
   template <class Result = size_t>
   forceinline Result operator()(const Key& key) const {
-    if (SecondLevelModelCount == 0) return root_model(key, max_output);
+    if (MaxSecondLevelModelCount == 0) return root_model(key, max_output);
 
-    const auto second_level_index = root_model(key, SecondLevelModelCount - 1);
+    const auto second_level_index =
+        root_model(key, second_level_models.size() - 1);
     return second_level_models[second_level_index](key, max_output);
   }
 
-  bool operator==(const RMIHash<Key, SecondLevelModelCount> other) const {
+  bool operator==(const RMIHash<Key, MaxSecondLevelModelCount> other) const {
     if (other.root_model != root_model) return false;
-    for (size_t i = 0; i < SecondLevelModelCount; i++)
+    if (other.second_level_models.size() != second_level_models.size())
+      return false;
+    for (size_t i = 0; i < second_level_models.size(); i++)
       if (other.second_level_models[i] != second_level_models[i]) return false;
 
     return true;
