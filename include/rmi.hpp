@@ -188,7 +188,7 @@ class RMIHash {
 
     // ensure that there are at least two datapoints per model on average
     second_level_models = decltype(second_level_models)(
-        std::min(MaxSecondLevelModelCount, sample_size / 2));
+        std::min(MaxSecondLevelModelCount, sample_size));
 
     if (FasterConstruction) {
       size_t previous_end = 0, finished_end = 0, last_index = 0;
