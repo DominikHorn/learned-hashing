@@ -51,10 +51,10 @@ TEST(RMI, ConstructionAlgorithmsMatch) {
                            dataset::ID::UNIFORM, dataset::ID::GAPPED_10}) {
       const auto dataset = dataset::load_cached(did, dataset_size);
 
-      const learned_hashing::RMIHash<Data, 10000, false> old_rmi(
+      const learned_hashing::RMIHash<Data, 10000> old_rmi(
           dataset.begin(), dataset.end(), dataset_size);
-      const learned_hashing::RMIHash<Data, 10000, false> new_rmi(
-          dataset.begin(), dataset.end(), dataset_size);
+      const learned_hashing::RMIHash<Data, 10000> new_rmi(
+          dataset.begin(), dataset.end(), dataset_size, true);
 
       EXPECT_EQ(old_rmi, new_rmi);
     }

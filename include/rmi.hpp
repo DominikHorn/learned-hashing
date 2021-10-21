@@ -131,8 +131,7 @@ struct LinearImpl {
   }
 };
 
-template <class Key, size_t MaxSecondLevelModelCount,
-          bool FasterConstruction = false, class Precision = double,
+template <class Key, size_t MaxSecondLevelModelCount, class Precision = double,
           class RootModel = LinearImpl<Key, Precision>,
           class SecondLevelModel = LinearImpl<Key, Precision>>
 class RMIHash {
@@ -163,8 +162,8 @@ class RMIHash {
    */
   template <class RandomIt>
   RMIHash(const RandomIt& sample_begin, const RandomIt& sample_end,
-          const size_t full_size) {
-    train(sample_begin, sample_end, full_size);
+          const size_t full_size, bool faster_construction = false) {
+    train(sample_begin, sample_end, full_size, faster_construction);
   }
 
   /**
@@ -177,7 +176,7 @@ class RMIHash {
    */
   template <class RandomIt>
   void train(const RandomIt& sample_begin, const RandomIt& sample_end,
-             const size_t full_size) {
+             const size_t full_size, bool faster_construction = false) {
     this->max_output = full_size - 1;
     const size_t sample_size = std::distance(sample_begin, sample_end);
     if (sample_size == 0) return;
@@ -190,7 +189,7 @@ class RMIHash {
     second_level_models = decltype(second_level_models)(
         std::min(MaxSecondLevelModelCount, sample_size));
 
-    if (FasterConstruction) {
+    if (faster_construction) {
       size_t previous_end = 0, finished_end = 0, last_index = 0;
       for (auto it = sample_begin; it < sample_end; it++) {
         // Predict second level model using root model and put
@@ -204,25 +203,27 @@ class RMIHash {
         // current bucket end
         size_t current_end = std::distance(sample_begin, it);
 
-        // we finished a bucket (sample sorted!)
+        // bucket is finished, train all affected models
         if (last_index < current_second_level_index) {
-          // 'train' last model
-          second_level_models[last_index] = SecondLevelModel(
-              sample_begin, sample_end, finished_end, previous_end);
+          // train models
+          while (last_index < current_second_level_index) {
+            second_level_models[last_index++] = SecondLevelModel(
+                sample_begin, sample_end, finished_end, previous_end);
 
-          // since all models are initialized to (0,0), we don't need to
-          // explicitely 'train' skipped models between last index and current
-          // index and can simple set last_index = current_second_level_index
-          last_index = current_second_level_index;
-          finished_end = previous_end;
+            finished_end = previous_end;
+          }
         }
 
         previous_end = current_end;
       }
 
-      // train last model (otherwise this would never happen
-      second_level_models[second_level_models.size() - 1] = SecondLevelModel(
-          sample_begin, sample_end, finished_end, previous_end);
+      // train all models that don't have any datapoints at the end to get
+      // correct intercept
+      while (last_index < second_level_models.size()) {
+        second_level_models[last_index++] = SecondLevelModel(
+            sample_begin, sample_end, finished_end, previous_end);
+        finished_end = previous_end;
+      }
     } else {
       // Assign each sample point into a training bucket according to root model
       std::vector<std::vector<Datapoint>> training_buckets(
@@ -241,9 +242,14 @@ class RMIHash {
         // The following works because the previous training bucket has to be
         // completed, because the sample is sorted: Each training bucket's min
         // is the previous training bucket's max (except for first bucket)
-        if (bucket.empty() && second_level_index > 0 &&
-            !training_buckets[second_level_index - 1].empty())
-          bucket.push_back(training_buckets[second_level_index - 1].back());
+        if (bucket.empty() && second_level_index > 0) {
+          size_t j = second_level_index - 1;
+          while (j < second_level_index && j >= 0 &&
+                 training_buckets[j].empty())
+            j--;
+          assert(!training_buckets[j].empty());
+          bucket.push_back(training_buckets[j].back());
+        }
 
         // Add datapoint at the end of the bucket
         bucket.push_back(Datapoint(
@@ -253,6 +259,7 @@ class RMIHash {
 
       // Edge case: First model does not have enough training data -> add
       // artificial datapoints
+      assert(training_buckets[0].size() >= 1);
       while (training_buckets[0].size() < 2)
         training_buckets[0].insert(training_buckets[0].begin(),
                                    Datapoint(0, 0));
@@ -307,10 +314,11 @@ class RMIHash {
     return result;
   }
 
-  bool operator==(const RMIHash<Key, MaxSecondLevelModelCount> other) const {
+  bool operator==(const RMIHash& other) const {
     if (other.root_model != root_model) return false;
     if (other.second_level_models.size() != second_level_models.size())
       return false;
+
     for (size_t i = 0; i < second_level_models.size(); i++)
       if (other.second_level_models[i] != second_level_models[i]) return false;
 
