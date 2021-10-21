@@ -300,7 +300,11 @@ class RMIHash {
 
     const auto second_level_index =
         root_model(key, second_level_models.size() - 1);
-    return second_level_models[second_level_index](key, max_output);
+    const auto result =
+        second_level_models[second_level_index](key, max_output);
+
+    assert(result <= max_output);
+    return result;
   }
 
   bool operator==(const RMIHash<Key, MaxSecondLevelModelCount> other) const {
