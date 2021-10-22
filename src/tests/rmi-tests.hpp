@@ -67,9 +67,6 @@ TEST(RMI, ConstructionAlgorithmsMatch) {
 
 // ==== MonotoneRMI ====
 
-// on sequential data, there mustn't be any collisions in theory.
-// However, floating point imprecisions lead to (few!) collisions
-// in practice
 TEST(MonotoneRMI, NoCollisionsOnSequential) {
   using Data = std::uint64_t;
   for (const auto dataset_size : {1000, 10000, 1000000}) {
