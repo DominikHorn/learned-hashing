@@ -106,6 +106,37 @@ struct LinearImpl {
             static_cast<Precision>(end) / static_cast<Precision>(std::distance(
                                               dataset_begin, dataset_end))) {}
 
+  template <class It>
+  LinearImpl(const It& dataset_begin, const It& dataset_end, size_t /*begin*/,
+             size_t end, Key prev_max_x, Precision prev_max_y)
+      : LinearImpl(
+            prev_max_x, prev_max_y,
+            std::max(prev_max_x, *(dataset_begin + end)),
+            std::max(prev_max_y,
+                     static_cast<Precision>(end) /
+                         static_cast<Precision>(
+                             std::distance(dataset_begin, dataset_end) - 1))) {}
+
+  /**
+   * computes y \in [0, 1] given a certain x
+   */
+  forceinline Precision normalized(const Key& k) const {
+    const auto res = slope * k + intercept;
+    if (res > 1.0) return 1.0;
+    if (res < 0.0) return 0.0;
+    return res;
+  }
+
+  /**
+   * computes x (rounded up) given a certain y in normalized space:
+   * (y \in [0, 1]).
+   */
+  forceinline Key normalized_inverse(const Precision y) const {
+    // y = ax + b <=> x = (y-b)/a
+    // +0.5 to round up (TODO(dominik): is this necessary?)
+    return 0.5 + (y - intercept) / slope;
+  }
+
   /**
    * Extrapolates an index for the given key to the range [0, max_value]
    *
@@ -116,8 +147,8 @@ struct LinearImpl {
   forceinline size_t
   operator()(const Key& k, const Precision& max_value =
                                std::numeric_limits<Precision>::max()) const {
-    // (slope * k + intercept) \in [0, 1] by construction
-    const size_t pred = max_value * (slope * k + intercept) + 0.5;
+    // +0.5 as a quick&dirty ceil trick
+    const size_t pred = max_value * normalized(k) + 0.5;
     assert(pred >= 0);
     assert(pred <= max_value);
     return pred;
@@ -159,6 +190,9 @@ class RMIHash {
    * @param sample_begin
    * @param sample_end
    * @param full_size operator() will extrapolate to [0, full_size)
+   * @param faster_construction whether or not to use the faster construction
+   *    algorithm without intermediate allocations etc. Around 100x speedup
+   *    while end result is the same (! tested on various datasets)
    */
   template <class RandomIt>
   RMIHash(const RandomIt& sample_begin, const RandomIt& sample_end,
@@ -173,6 +207,9 @@ class RMIHash {
    * @param sample_begin
    * @param sample_end
    * @param full_size operator() will extrapolate to [0, full_size)
+   * @param faster_construction whether or not to use the faster construction
+   *    algorithm without intermediate allocations etc. Around 100x speedup
+   *    while end result is the same (! tested on various datasets)
    */
   template <class RandomIt>
   void train(const RandomIt& sample_begin, const RandomIt& sample_end,
@@ -185,12 +222,21 @@ class RMIHash {
         decltype(root_model)(sample_begin, sample_end, 0, sample_size - 1);
     if (MaxSecondLevelModelCount == 0) return;
 
-    // ensure that there are at least two datapoints per model on average
+    // ensure that there is at least one datapoint per model on average
     second_level_models = decltype(second_level_models)(
         std::min(MaxSecondLevelModelCount, sample_size));
 
     if (faster_construction) {
+      // convenience function for training (code deduplication)
       size_t previous_end = 0, finished_end = 0, last_index = 0;
+      const auto train_until = [&](const size_t i) {
+        while (last_index < i) {
+          second_level_models[last_index++] = SecondLevelModel(
+              sample_begin, sample_end, finished_end, previous_end);
+          finished_end = previous_end;
+        }
+      };
+
       for (auto it = sample_begin; it < sample_end; it++) {
         // Predict second level model using root model and put
         // sample datapoint into corresponding training bucket
@@ -200,30 +246,16 @@ class RMIHash {
         assert(current_second_level_index >= 0);
         assert(current_second_level_index < second_level_models.size());
 
-        // current bucket end
-        size_t current_end = std::distance(sample_begin, it);
-
         // bucket is finished, train all affected models
-        if (last_index < current_second_level_index) {
-          // train models
-          while (last_index < current_second_level_index) {
-            second_level_models[last_index++] = SecondLevelModel(
-                sample_begin, sample_end, finished_end, previous_end);
+        if (last_index < current_second_level_index)
+          train_until(current_second_level_index);
 
-            finished_end = previous_end;
-          }
-        }
-
-        previous_end = current_end;
+        // last consumed datapoint
+        previous_end = std::distance(sample_begin, it);
       }
 
-      // train all models that don't have any datapoints at the end to get
-      // correct intercept
-      while (last_index < second_level_models.size()) {
-        second_level_models[last_index++] = SecondLevelModel(
-            sample_begin, sample_end, finished_end, previous_end);
-        finished_end = previous_end;
-      }
+      // train all remaining models
+      train_until(second_level_models.size());
     } else {
       // Assign each sample point into a training bucket according to root model
       std::vector<std::vector<Datapoint>> training_buckets(
@@ -323,6 +355,156 @@ class RMIHash {
       if (other.second_level_models[i] != second_level_models[i]) return false;
 
     return true;
+  }
+};
+
+/**
+ * Like RMIHash, but monotone even for non-keys due to modified
+ * construction algorithm. As of writing, only implemented
+ * using LinearImpl models
+ */
+template <class Key, size_t MaxSecondLevelModelCount, class Precision = double,
+          class RootModel = LinearImpl<Key, Precision>,
+          class SecondLevelModel = LinearImpl<Key, Precision>>
+class MonotoneRMIHash {
+  using Datapoint = DatapointImpl<Key, Precision>;
+  using Model = LinearImpl<Key, Precision>;
+
+  /// Root model
+  RootModel root_model;
+
+  /// Second level models
+  std::vector<SecondLevelModel> second_level_models;
+
+  /// output range is scaled from [0, 1] to [0, max_output] = [0, full_size)
+  size_t max_output = 0;
+
+ public:
+  /**
+   * Constructs an empty, untrained RMI. to train, manually
+   * train by invoking the train() function
+   */
+  MonotoneRMIHash() = default;
+
+  /**
+   * Builds rmi on an already sorted (!) sample
+   * @tparam RandomIt
+   * @param sample_begin
+   * @param sample_end
+   * @param full_size operator() will extrapolate to [0, full_size)
+   */
+  template <class RandomIt>
+  MonotoneRMIHash(const RandomIt& sample_begin, const RandomIt& sample_end,
+                  const size_t full_size) {
+    train(sample_begin, sample_end, full_size);
+  }
+
+  /**
+   * trains rmi on an already sorted sample
+   *
+   * @tparam RandomIt
+   * @param sample_begin
+   * @param sample_end
+   * @param full_size operator() will extrapolate to [0, full_size)
+   */
+  template <class RandomIt>
+  void train(const RandomIt& sample_begin, const RandomIt& sample_end,
+             const size_t full_size) {
+    this->max_output = full_size - 1;
+    const size_t sample_size = std::distance(sample_begin, sample_end);
+    if (sample_size == 0) return;
+
+    // train root model
+    root_model = decltype(root_model)(sample_begin, sample_end, 0,
+                                      sample_size - 1, *sample_begin, 0.0);
+
+    assert(root_model.normalized(*sample_begin) <= 0.0001);
+    assert(root_model.normalized(*(sample_end - 1)) >= 0.9999);
+
+    // special case: single level model
+    if (MaxSecondLevelModelCount == 0) return;
+
+    // ensure that there is at least one datapoint per model on average to not
+    // waste space
+    second_level_models = decltype(second_level_models)(
+        std::min(MaxSecondLevelModelCount, sample_size));
+
+    // finds (virtual) true min datapoint for training bucket/second level model
+    // i such that monotony is retained even for non-keys that fit in between
+    // actual keys present in the dataset
+    const auto true_min_x = [&](const size_t i) {
+      return (i > 0) * root_model.normalized_inverse(
+                           static_cast<double>(i) /
+                           static_cast<double>(second_level_models.size()));
+    };
+    const auto true_min_y = [&](const size_t i, const size_t i_min_x) {
+      if (i == 0) return 0.0;
+      const auto prev_max_y = second_level_models[i - 1].normalized(i_min_x);
+      return prev_max_y;
+    };
+
+    // convenience function for training (code deduplication)
+    size_t previous_end = 0, finished_end = 0, last_index = 0;
+    const auto train_until = [&](const size_t i) {
+      while (last_index < i) {
+        const auto prev_max_x = true_min_x(last_index);
+        const auto prev_max_y = true_min_y(last_index, prev_max_x);
+        second_level_models[last_index++] =
+            SecondLevelModel(sample_begin, sample_end, finished_end,
+                             previous_end, prev_max_x, prev_max_y);
+        finished_end = previous_end;
+      }
+    };
+
+    // train second level models
+    for (auto it = sample_begin; it < sample_end; it++) {
+      // Predict second level model using root model and put
+      // sample datapoint into corresponding training bucket
+      const auto key = *it;
+      const size_t current_second_level_index =
+          root_model.normalized(key) * second_level_models.size();
+      assert(current_second_level_index >= 0);
+      assert(current_second_level_index <= second_level_models.size());
+
+      // bucket is finished, train all affected models up until
+      // the current model to train
+      if (last_index < current_second_level_index)
+        train_until(current_second_level_index);
+
+      previous_end = std::distance(sample_begin, it);
+    }
+
+    // train remaining models
+    train_until(second_level_models.size());
+  }
+
+  static std::string name() {
+    return "monotone_rmi_hash_" + std::to_string(MaxSecondLevelModelCount);
+  }
+
+  size_t byte_size() const {
+    return sizeof(decltype(this)) + sizeof(Model) * second_level_models.size();
+  }
+
+  size_t model_count() { return 1 + second_level_models.size(); }
+
+  /**
+   * Compute hash value for key
+   *
+   * @tparam Result result data type. Defaults to size_t
+   * @param key
+   */
+  template <class Result = size_t>
+  forceinline Result operator()(const Key& key) const {
+    if (MaxSecondLevelModelCount == 0) return root_model(key, max_output);
+
+    const size_t second_level_index =
+        root_model.normalized(key) * second_level_models.size();
+
+    if (unlikely(second_level_index >= second_level_models.size()))
+      return max_output;
+
+    return second_level_models[second_level_index].normalized(key) * max_output;
   }
 };
 }  // namespace learned_hashing

@@ -2,8 +2,10 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <learned_hashing.hpp>
+#include <limits>
 #include <tuple>
 #include <vector>
 
@@ -15,6 +17,8 @@ void iter_rmis(const std::tuple<Tp...>& t, const std::vector<Data>& dataset,
   if constexpr (I + 1 != sizeof...(Tp))
     iter_rmis<Data, I + 1>(t, dataset, dataset_size);
 }
+
+// ==== RMI ====
 
 // on sequential data, there mustn't be any collisions in theory.
 // However, floating point imprecisions lead to (few!) collisions
@@ -57,6 +61,31 @@ TEST(RMI, ConstructionAlgorithmsMatch) {
           dataset.begin(), dataset.end(), dataset_size, true);
 
       EXPECT_EQ(old_rmi, new_rmi);
+    }
+  }
+}
+
+// ==== MonotoneRMI ====
+TEST(MonotoneRMI, IsMonotone) {
+  using Data = std::uint64_t;
+
+  // generate test datasets
+  std::vector<std::vector<Data>> datasets{
+      {1, 2, 4, 7, 10, 1000},
+      dataset::load_cached(dataset::ID::GAPPED_10, 10000)};
+
+  for (const auto& dataset : datasets) {
+    // build monotone rmi model
+    const learned_hashing::MonotoneRMIHash<Data, 4> mon_rmi(
+        dataset.begin(), dataset.end(), dataset.size());
+
+    // test monotony
+    size_t last_i = 0;
+    for (Data k = *std::min_element(dataset.begin(), dataset.end());
+         k < *std::max_element(dataset.begin(), dataset.end()); k++) {
+      size_t new_i = mon_rmi(k);
+      EXPECT_GE(new_i, last_i);
+      last_i = new_i;
     }
   }
 }
