@@ -29,7 +29,7 @@
       "configuration": {
         "request": "launch",
         "program": "cmake-build-debug/src/lh_tests",
-        "args": [""],
+        "args": [],
         "cwd": "${workspaceRoot}",
         "environment": [],
         "externalConsole": true,
