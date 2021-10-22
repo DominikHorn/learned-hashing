@@ -91,7 +91,9 @@ TEST(MonotoneRMI, NoCollisionsOnSequential) {
   }
 }
 
-TEST(MonotoneRMI, IsMonotone) {
+/// Tests whether MonotoneRMI is monotone for non-keys. This is important, e.g.,
+/// if trained on a sample or used within a montone Hashtable
+TEST(MonotoneRMI, IsMonotoneForNonKeys) {
   using Data = std::uint64_t;
 
   // generate test datasets
