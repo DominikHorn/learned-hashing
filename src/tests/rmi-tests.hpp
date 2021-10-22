@@ -66,6 +66,34 @@ TEST(RMI, ConstructionAlgorithmsMatch) {
 }
 
 // ==== MonotoneRMI ====
+
+// on sequential data, there mustn't be any collisions in theory.
+// However, floating point imprecisions lead to (few!) collisions
+// in practice
+TEST(MonotoneRMI, NoCollisionsOnSequential) {
+  using Data = std::uint64_t;
+  for (const auto dataset_size : {1000, 10000, 1000000}) {
+    std::vector<Data> dataset(dataset_size, 0);
+    for (size_t i = 0; i < dataset.size(); i++) dataset[i] = 20000 + i;
+
+    const learned_hashing::MonotoneRMIHash<Data, 100> mon_rmi(
+        dataset.begin(), dataset.end(), dataset_size);
+
+    size_t incidents = 0;
+    std::vector<bool> slot_occupied(dataset_size, false);
+    for (size_t i = 0; i < dataset.size(); i++) {
+      const size_t index = mon_rmi(dataset[i]);
+
+      EXPECT_GE(index, 0);
+      EXPECT_LT(index, dataset.size());
+
+      incidents += slot_occupied[index];
+      slot_occupied[index] = true;
+    }
+    EXPECT_EQ(incidents, 0);
+  }
+}
+
 TEST(MonotoneRMI, IsMonotone) {
   using Data = std::uint64_t;
 

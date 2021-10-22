@@ -377,7 +377,7 @@ class MonotoneRMIHash {
   std::vector<SecondLevelModel> second_level_models;
 
   /// output range is scaled from [0, 1] to [0, max_output] = [0, full_size)
-  size_t max_output = 0;
+  size_t full_size = 0;
 
  public:
   /**
@@ -410,7 +410,7 @@ class MonotoneRMIHash {
   template <class RandomIt>
   void train(const RandomIt& sample_begin, const RandomIt& sample_end,
              const size_t full_size) {
-    this->max_output = full_size - 1;
+    this->full_size = full_size;
     const size_t sample_size = std::distance(sample_begin, sample_end);
     if (sample_size == 0) return;
 
@@ -433,9 +433,10 @@ class MonotoneRMIHash {
     // i such that monotony is retained even for non-keys that fit in between
     // actual keys present in the dataset
     const auto true_min_x = [&](const size_t i) {
-      return (i > 0) * root_model.normalized_inverse(
-                           static_cast<double>(i) /
-                           static_cast<double>(second_level_models.size()));
+      if (i == 0) return *sample_begin;
+      return root_model.normalized_inverse(
+          static_cast<double>(i) /
+          static_cast<double>(second_level_models.size()));
     };
     const auto true_min_y = [&](const size_t i, const size_t i_min_x) {
       if (i == 0) return 0.0;
@@ -496,15 +497,18 @@ class MonotoneRMIHash {
    */
   template <class Result = size_t>
   forceinline Result operator()(const Key& key) const {
-    if (MaxSecondLevelModelCount == 0) return root_model(key, max_output);
+    if (MaxSecondLevelModelCount == 0) return root_model(key, full_size);
 
     const size_t second_level_index =
         root_model.normalized(key) * second_level_models.size();
 
     if (unlikely(second_level_index >= second_level_models.size()))
-      return max_output;
+      return full_size - 1;
 
-    return second_level_models[second_level_index].normalized(key) * max_output;
+    const size_t res =
+        second_level_models[second_level_index].normalized(key) * full_size;
+
+    return res - ((res >= full_size) & 0x1);
   }
 };
 }  // namespace learned_hashing
