@@ -162,7 +162,8 @@ struct LinearImpl {
   }
 };
 
-template <class Key, size_t MaxSecondLevelModelCount, class Precision = double,
+template <class Key, size_t MaxSecondLevelModelCount,
+          size_t MinAvgDatapointsPerModel = 2, class Precision = double,
           class RootModel = LinearImpl<Key, Precision>,
           class SecondLevelModel = LinearImpl<Key, Precision>>
 class RMIHash {
@@ -222,9 +223,10 @@ class RMIHash {
         decltype(root_model)(sample_begin, sample_end, 0, sample_size - 1);
     if (MaxSecondLevelModelCount == 0) return;
 
-    // ensure that there is at least one datapoint per model on average
-    second_level_models = decltype(second_level_models)(
-        std::min(MaxSecondLevelModelCount, sample_size));
+    // ensure that there is at least MinAvgDatapointsPerModel datapoints per
+    // model on average to not waste space/resources
+    second_level_models = decltype(second_level_models)(std::min(
+        MaxSecondLevelModelCount, sample_size / MinAvgDatapointsPerModel));
 
     if (faster_construction) {
       // convenience function for training (code deduplication)
@@ -363,7 +365,8 @@ class RMIHash {
  * construction algorithm. As of writing, only implemented
  * using LinearImpl models
  */
-template <class Key, size_t MaxSecondLevelModelCount, class Precision = double,
+template <class Key, size_t MaxSecondLevelModelCount,
+          size_t MinAvgDatapointsPerModel = 2, class Precision = double,
           class RootModel = LinearImpl<Key, Precision>,
           class SecondLevelModel = LinearImpl<Key, Precision>>
 class MonotoneRMIHash {
@@ -424,10 +427,10 @@ class MonotoneRMIHash {
     // special case: single level model
     if (MaxSecondLevelModelCount == 0) return;
 
-    // ensure that there is at least one datapoint per model on average to not
-    // waste space
-    second_level_models = decltype(second_level_models)(
-        std::min(MaxSecondLevelModelCount, sample_size));
+    // ensure that there is at least MinAvgDatapointsPerModel datapoints per
+    // model on average to not waste space/resources
+    second_level_models = decltype(second_level_models)(std::min(
+        MaxSecondLevelModelCount, sample_size / MinAvgDatapointsPerModel));
 
     // finds (virtual) true min datapoint for training bucket/second level model
     // i such that monotony is retained even for non-keys that fit in between
