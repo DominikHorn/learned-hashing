@@ -1,4 +1,7 @@
-#pragma once
+#include "undef.hpp"
+
+/// prevent unused warnings
+#define UNUSED(x) (void)(x)
 
 #ifdef __GNUC__
 #ifdef NDEBUG
