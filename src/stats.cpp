@@ -62,7 +62,7 @@ void export_all_ds(size_t dataset_size = 100000000,
     histogram<HashFn>(
         fn,
         "stats/histogram/" + HashFn::name() + "_" + dataset::name(did) + ".csv",
-        dataset.begin(), dataset.end(), bucket_step);
+        dataset.begin(), dataset.end(), hist_bucket_cnt);
     fn.write_as_csv("stats/models/" + HashFn::name() + "_" +
                     dataset::name(did) + ".csv");
   }
