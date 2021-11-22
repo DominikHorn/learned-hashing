@@ -31,6 +31,7 @@ void histogram(const Hashfn& fn, const std::string& filepath,
 
   std::ofstream csv_file;
   csv_file.open(filepath);
+  std::cout << "writing: " << filepath << std::endl;
 
   csv_file << "bucket_lower,bucket_upper,bucket_value" << std::endl;
   for (size_t i = 0; i < hist.size(); i++)
@@ -46,6 +47,7 @@ void model(const Hashfn& fn, const std::string& filepath, const RandomIt& begin,
            const RandomIt& end) {
   std::ofstream csv_file;
   csv_file.open(filepath);
+  std::cout << "writing: " << filepath << std::endl;
 
   const auto ds_size = std::distance(begin, end);
 

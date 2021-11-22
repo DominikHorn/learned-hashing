@@ -9,4 +9,4 @@ cd "$(dirname "$0")"
 cmake-build-release/src/lh_stats $@
 
 # export stats
-python plot_stats.py stats/**/*.csv
+python plot_stats.py stats/*/*/*.csv
