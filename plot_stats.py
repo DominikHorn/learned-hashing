@@ -8,5 +8,5 @@ if len(sys.argv) < 2:
 
 for ds in sys.argv[1:]:
     df = pd.read_csv(ds)
-    fig = px.bar(df, x="bucket_lower", y="bucket_value", title=ds)
+    fig = px.line(df, x="bucket_lower", y="bucket_value", title=ds)
     fig.show()
