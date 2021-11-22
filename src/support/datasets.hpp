@@ -126,8 +126,7 @@ inline std::string name(ID id) {
 
 template <class Data = std::uint64_t>
 std::vector<Data> load_cached(ID id, size_t dataset_size) {
-  static std::random_device rd;
-  static std::default_random_engine rng(rd());
+  static std::mt19937_64 rng(1337);
 
   // cache generated & sampled datasets to speed up repeated benchmarks
   static std::unordered_map<ID, std::unordered_map<size_t, std::vector<Data>>>
