@@ -3,17 +3,17 @@ import pandas as pd
 import sys
 import os
 import concurrent.futures
+import numpy as np
 
 def plot(ds):
-    # read and prepare data
     df = pd.read_csv(ds)
-    fig = px.line(df, x="bucket_lower", y="bucket_value", title=f"{ds} ({len(df)} buckets)")
-    fig.write_image(f"{os.path.splitext(ds)[0]}.png", scale=2)
+    if 'models' in ds.lower():
+        fig = px.line(df, x='x', y='y')
+        fig.write_image(f"{os.path.splitext(ds)[0]}.png", scale=4)
 
-    #df['bucket_value_sum'] = df['bucket_value'].expanding().sum()
-    #df['bucket_value_sum'] /= df['bucket_value_sum'].max()
-    #fig = px.line(df, x="bucket_lower", y="bucket_value_sum", title=f"{ds} ({len(df)} buckets)")
-    #fig.show()
+    elif ds.contains('histogram'):
+        fig = px.line(df, x="bucket_lower", y="bucket_value", title=f"{ds} ({len(df)} buckets)")
+        fig.write_image(f"{os.path.splitext(ds)[0]}.png", scale=4)
 
 if len(sys.argv) < 2:
     print("Please specify the csv files to plot")
