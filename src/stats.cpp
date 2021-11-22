@@ -48,7 +48,7 @@ void model(const Hashfn& fn, const std::string& filepath, const RandomIt& begin,
   csv_file.open(filepath);
 
   csv_file << "x,y" << std::endl;
-  for (auto it = begin; it < end; it += 100) {
+  for (auto it = begin; it < end; it += 10) {
     csv_file << *it << "," << fn(*it) << std::endl;
   }
 
@@ -56,7 +56,7 @@ void model(const Hashfn& fn, const std::string& filepath, const RandomIt& begin,
 }
 
 template <class HashFn>
-void export_all_ds(size_t dataset_size = 100000000,
+void export_all_ds(size_t dataset_size = 10000000,
                    double bucket_step = 0.000001) {
   for (const auto did :
        {dataset::ID::SEQUENTIAL, dataset::ID::GAPPED_10, dataset::ID::UNIFORM,
@@ -73,12 +73,13 @@ void export_all_ds(size_t dataset_size = 100000000,
     HashFn fn(dataset.begin(), dataset.end(), hist_bucket_cnt);
 
     // export histogram and fn itself
-    histogram(
-        fn,
-        "stats/histogram/" + HashFn::name() + "_" + dataset::name(did) + ".csv",
-        dataset.begin(), dataset.end(), hist_bucket_cnt);
+    histogram(fn,
+              "stats/10M/histogram/" + HashFn::name() + "_" +
+                  dataset::name(did) + ".csv",
+              dataset.begin(), dataset.end(), hist_bucket_cnt);
     model(fn,
-          "stats/models/" + HashFn::name() + "_" + dataset::name(did) + ".csv",
+          "stats/10M/models/" + HashFn::name() + "_" + dataset::name(did) +
+              ".csv",
           dataset.begin(), dataset.end());
   }
 }
