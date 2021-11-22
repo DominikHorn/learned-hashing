@@ -8,7 +8,7 @@ import numpy as np
 def plot(ds):
     df = pd.read_csv(ds)
     if 'models' in ds.lower():
-        fig = px.line(df, x='x', y='y')
+        fig = px.line(df, x='x', y='y', title=f"{ds} ({len(df)} datapoints)")
         fig.write_image(f"{os.path.splitext(ds)[0]}.png", scale=4)
 
     elif ds.contains('histogram'):
