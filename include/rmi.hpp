@@ -362,23 +362,6 @@ class RMIHash {
 
     return true;
   }
-
-  /// 'temporary' method for debugging rmi
-  void write_as_csv(const std::string& filepath) {
-    std::ofstream csv_file;
-    csv_file.open(filepath);
-
-    csv_file << "layer,index,slope,intercept" << std::endl;
-    csv_file << "0,0," << root_model.get_slope() << ","
-             << root_model.get_intercept() << std::endl;
-    for (size_t i = 0; i < second_level_models.size(); i++) {
-      const auto& model = second_level_models[i];
-      csv_file << 1 << "," << i << "," << model.get_slope() << ","
-               << model.get_intercept() << std::endl;
-    }
-
-    csv_file.close();
-  }
 };
 
 /**
@@ -533,23 +516,6 @@ class MonotoneRMIHash {
         second_level_models[second_level_index].normalized(key) * full_size;
 
     return res - ((res >= full_size) & 0x1);
-  }
-
-  /// 'temporary' method for debugging rmi
-  void write_as_csv(const std::string& filepath) {
-    std::ofstream csv_file;
-    csv_file.open(filepath);
-
-    csv_file << "layer,index,slope,intercept" << std::endl;
-    csv_file << "0,0," << root_model.get_slope() << ","
-             << root_model.get_intercept() << std::endl;
-    for (size_t i = 0; i < second_level_models.size(); i++) {
-      const auto& model = second_level_models[i];
-      csv_file << 1 << "," << i << "," << model.get_slope() << ","
-               << model.get_intercept() << std::endl;
-    }
-
-    csv_file.close();
   }
 };
 }  // namespace learned_hashing

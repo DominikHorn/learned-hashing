@@ -41,6 +41,20 @@ void histogram(const Hashfn& fn, const std::string& filepath,
   csv_file.close();
 }
 
+template <class Hashfn, class RandomIt>
+void model(const Hashfn& fn, const std::string& filepath, const RandomIt& begin,
+           const RandomIt& end) {
+  std::ofstream csv_file;
+  csv_file.open(filepath);
+
+  csv_file << "x,y" << std::endl;
+  for (auto it = begin; it < end; it += 5) {
+    csv_file << *it << "," << fn(*it) << std::endl;
+  }
+
+  csv_file.close();
+}
+
 template <class HashFn>
 void export_all_ds(size_t dataset_size = 100000000,
                    double bucket_step = 0.000001) {
@@ -59,12 +73,13 @@ void export_all_ds(size_t dataset_size = 100000000,
     HashFn fn(dataset.begin(), dataset.end(), hist_bucket_cnt);
 
     // export histogram and fn itself
-    histogram<HashFn>(
+    histogram(
         fn,
         "stats/histogram/" + HashFn::name() + "_" + dataset::name(did) + ".csv",
         dataset.begin(), dataset.end(), hist_bucket_cnt);
-    fn.write_as_csv("stats/models/" + HashFn::name() + "_" +
-                    dataset::name(did) + ".csv");
+    model(fn,
+          "stats/models/" + HashFn::name() + "_" + dataset::name(did) + ".csv",
+          dataset.begin(), dataset.end());
   }
 }
 
