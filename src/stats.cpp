@@ -48,7 +48,7 @@ void model(const Hashfn& fn, const std::string& filepath, const RandomIt& begin,
   csv_file.open(filepath);
 
   csv_file << "x,y" << std::endl;
-  for (auto it = begin; it < end; it += 5) {
+  for (auto it = begin; it < end; it += 100) {
     csv_file << *it << "," << fn(*it) << std::endl;
   }
 
