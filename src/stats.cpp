@@ -71,7 +71,7 @@ void hist_to_csv(const std::string& filepath, const std::vector<size_t>& hist,
 }
 
 template <class HashFn>
-void hist_all_ds(size_t dataset_size = 10000000, double bucket_step = 0.001) {
+void hist_all_ds(size_t dataset_size = 100000000, double bucket_step = 0.005) {
   for (const auto did :
        {dataset::ID::SEQUENTIAL, dataset::ID::GAPPED_10, dataset::ID::UNIFORM,
         dataset::ID::WIKI, dataset::ID::NORMAL, dataset::ID::OSM,
