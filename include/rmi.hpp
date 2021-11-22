@@ -368,12 +368,14 @@ class RMIHash {
     std::ofstream csv_file;
     csv_file.open(filepath);
 
-    csv_file << "layer,slope,intercept" << std::endl;
-    csv_file << 0 << "," << root_model.get_slope() << ","
+    csv_file << "layer,index,slope,intercept" << std::endl;
+    csv_file << "0,0," << root_model.get_slope() << ","
              << root_model.get_intercept() << std::endl;
-    for (const auto& model : second_level_models)
-      csv_file << 0 << "," << model.get_slope() << "," << model.get_intercept()
-               << std::endl;
+    for (size_t i = 0; i < second_level_models.size(); i++) {
+      const auto& model = second_level_models[i];
+      csv_file << 1 << "," << i << "," << model.get_slope() << ","
+               << model.get_intercept() << std::endl;
+    }
 
     csv_file.close();
   }
