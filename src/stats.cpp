@@ -25,7 +25,6 @@ std::vector<size_t> histogram(const RandomIt& begin, const RandomIt& end,
   std::is_sorted(begin, end);
 
   // variables
-  const auto dataset_size = std::distance(begin, end);
   const auto bucket_cnt = 1.0 / bucket_step;
   std::vector<size_t> buckets(bucket_cnt, 0);
 
