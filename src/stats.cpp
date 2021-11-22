@@ -19,44 +19,14 @@
  * bucket_size \in [0, 1]
  */
 template <class Hashfn, class RandomIt>
-std::vector<size_t> histogram(const RandomIt& begin, const RandomIt& end,
-                              double bucket_step) {
-  // preconditions
-  std::is_sorted(begin, end);
-
+void histogram(const Hashfn& fn, const std::string& filepath,
+               const RandomIt& begin, const RandomIt& end, double bucket_cnt) {
   // variables
-  const auto bucket_cnt = 1.0 / bucket_step;
-  std::vector<size_t> buckets(bucket_cnt, 0);
-
-  // train hash function
-  Hashfn fn(begin, end, bucket_cnt);
+  std::vector<size_t> hist(bucket_cnt, 0);
 
   // build historgram
-  for (auto it = begin; it < end; it++) buckets[fn(*it)]++;
+  for (auto it = begin; it < end; it++) hist[fn(*it)]++;
 
-  return buckets;
-}
-
-template <class T>
-void print_hist(const std::vector<size_t>& hist, double bucket_step,
-                dataset::ID did, const std::vector<T>& dataset) {
-  const auto max = std::max_element(hist.begin(), hist.end());
-  std::cout << "Stats for " << std::fixed << std::setprecision(2)
-            << dataset::name(did) << " (" << dataset.size()
-            << " elems):" << std::endl;
-  for (size_t i = 0; i < hist.size(); i++) {
-    const auto bucket = hist[i];
-    std::cout << "[" << i * bucket_step << ", " << (i + 1) * bucket_step << ") "
-              << bucket << " elems: ";
-    for (size_t i = 0; i < (100 * bucket / *max); i++) {
-      std::cout << "*";
-    }
-    std::cout << std::endl;
-  }
-}
-
-void hist_to_csv(const std::string& filepath, const std::vector<size_t>& hist,
-                 double bucket_step) {
   if (hist.empty()) return;
 
   std::ofstream csv_file;
@@ -64,15 +34,16 @@ void hist_to_csv(const std::string& filepath, const std::vector<size_t>& hist,
 
   csv_file << "bucket_lower,bucket_upper,bucket_value" << std::endl;
   for (size_t i = 0; i < hist.size(); i++)
-    csv_file << i * bucket_step << "," << (i + 1) * bucket_step << ","
-             << hist[i] << std::endl;
+    csv_file << static_cast<double>(i) / static_cast<double>(hist.size()) << ","
+             << static_cast<double>(i + 1) / static_cast<double>(hist.size())
+             << "," << hist[i] << std::endl;
 
   csv_file.close();
 }
 
 template <class HashFn>
-void hist_all_ds(size_t dataset_size = 100000000,
-                 double bucket_step = 0.000001) {
+void export_all_ds(size_t dataset_size = 100000000,
+                   double bucket_step = 0.000001) {
   for (const auto did :
        {dataset::ID::SEQUENTIAL, dataset::ID::GAPPED_10, dataset::ID::UNIFORM,
         dataset::ID::WIKI, dataset::ID::NORMAL, dataset::ID::OSM,
@@ -80,15 +51,20 @@ void hist_all_ds(size_t dataset_size = 100000000,
     const auto dataset = dataset::load_cached(did, dataset_size);
     if (dataset.empty()) continue;
 
-    const auto hist =
-        histogram<HashFn>(dataset.begin(), dataset.end(), bucket_step);
+    // preconditions
+    std::is_sorted(dataset.begin(), dataset.end());
+    const auto hist_bucket_cnt = 1.0 / bucket_step;
 
-    hist_to_csv(
+    // train hash function
+    HashFn fn(dataset.begin(), dataset.end(), hist_bucket_cnt);
+
+    // export histogram and fn itself
+    histogram<HashFn>(
+        fn,
         "stats/histogram/" + HashFn::name() + "_" + dataset::name(did) + ".csv",
-        hist, bucket_step);
-
-    // std::cout << "===== " << HashFn::name() << " =====" << std::endl;
-    // print_hist(hist, bucket_step, did, dataset);
+        dataset.begin(), dataset.end(), bucket_step);
+    fn.write_as_csv("stats/models/" + HashFn::name() + "_" +
+                    dataset::name(did) + ".csv");
   }
 }
 
@@ -96,8 +72,8 @@ int main() {
   using RMI = learned_hashing::RMIHash<std::uint64_t, 1000000>;
   using MonotoneRMI = learned_hashing::MonotoneRMIHash<std::uint64_t, 1000000>;
 
-  hist_all_ds<RMI>();
-  hist_all_ds<MonotoneRMI>();
+  export_all_ds<RMI>();
+  export_all_ds<MonotoneRMI>();
 
   return 0;
 }
