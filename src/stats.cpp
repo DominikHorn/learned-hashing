@@ -37,8 +37,27 @@ std::vector<size_t> histogram(const RandomIt& begin, const RandomIt& end,
   return buckets;
 }
 
+template <class T>
+void print_hist(const std::vector<size_t>& hist, double bucket_step,
+                dataset::ID did, const std::vector<T>& dataset) {
+  const auto max = std::max_element(hist.begin(), hist.end());
+  std::cout << "Stats for " << std::fixed << std::setprecision(2)
+            << dataset::name(did) << " (" << dataset.size()
+            << " elems):" << std::endl;
+  for (size_t i = 0; i < hist.size(); i++) {
+    const auto bucket = hist[i];
+    std::cout << "[" << i * bucket_step << ", " << (i + 1) * bucket_step
+              << "): ";
+    for (size_t i = 0; i < (100 * bucket / *max); i++) {
+      std::cout << "*";
+    }
+    std::cout << std::endl;
+  }
+}
+
 int main() {
   using RMI = learned_hashing::RMIHash<std::uint64_t, 1000000>;
+  using MonotoneRMI = learned_hashing::MonotoneRMIHash<std::uint64_t, 1000000>;
 
   const auto dataset_size = 10000000;
   const auto bucket_step = 0.02;
@@ -50,23 +69,16 @@ int main() {
     const auto dataset = dataset::load_cached(did, dataset_size);
     if (dataset.empty()) continue;
 
-    const auto hist =
+    const auto rmi_hist =
         histogram<RMI>(dataset.begin(), dataset.end(), bucket_step);
+    const auto monotone_rmi_hist =
+        histogram<MonotoneRMI>(dataset.begin(), dataset.end(), bucket_step);
 
-    // temporary export code
-    const auto max = std::max_element(hist.begin(), hist.end());
-    std::cout << "Stats for " << std::fixed << std::setprecision(2)
-              << dataset::name(did) << " (" << dataset.size()
-              << " elems):" << std::endl;
-    for (size_t i = 0; i < hist.size(); i++) {
-      const auto bucket = hist[i];
-      std::cout << "[" << i * bucket_step << ", " << (i + 1) * bucket_step
-                << "): ";
-      for (size_t i = 0; i < (100 * bucket / *max); i++) {
-        std::cout << "*";
-      }
-      std::cout << std::endl;
-    }
+    // TODO: tmp
+    std::cout << " ===== RMI ===== " << std::endl;
+    print_hist(rmi_hist, bucket_step, did, dataset);
+    std::cout << " ===== MONOTONE RMI ===== " << std::endl;
+    print_hist(monotone_rmi_hist, bucket_step, did, dataset);
   }
 
   return 0;
