@@ -83,7 +83,7 @@ void hist_all_ds(size_t dataset_size = 100000000,
     const auto hist =
         histogram<HashFn>(dataset.begin(), dataset.end(), bucket_step);
 
-    hist_to_csv(HashFn::name() + "_" + dataset::name(did) + ".csv", hist,
+    hist_to_csv("stats/" + HashFn::name() + "_" + dataset::name(did) + ".csv", hist,
                 bucket_step);
 
     // std::cout << "===== " << HashFn::name() << " =====" << std::endl;
