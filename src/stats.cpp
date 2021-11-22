@@ -47,8 +47,10 @@ void model(const Hashfn& fn, const std::string& filepath, const RandomIt& begin,
   std::ofstream csv_file;
   csv_file.open(filepath);
 
+  const auto ds_size = std::distance(begin, end);
+
   csv_file << "x,y" << std::endl;
-  for (auto it = begin; it < end; it += 10) {
+  for (auto it = begin; it < end; it += ds_size / 1000000) {
     csv_file << *it << "," << fn(*it) << std::endl;
   }
 
@@ -56,8 +58,7 @@ void model(const Hashfn& fn, const std::string& filepath, const RandomIt& begin,
 }
 
 template <class HashFn>
-void export_all_ds(size_t dataset_size = 10000000,
-                   double bucket_step = 0.000001) {
+void export_all_ds(size_t dataset_size, double bucket_step = 0.000001) {
   for (const auto did :
        {dataset::ID::SEQUENTIAL, dataset::ID::GAPPED_10, dataset::ID::UNIFORM,
         dataset::ID::WIKI, dataset::ID::NORMAL, dataset::ID::OSM,
@@ -74,12 +75,13 @@ void export_all_ds(size_t dataset_size = 10000000,
 
     // export histogram and fn itself
     histogram(fn,
-              "stats/10M/histogram/" + HashFn::name() + "_" +
-                  dataset::name(did) + ".csv",
+              "stats/" + std::to_string(dataset_size / 1000000) +
+                  "M/histogram/" + HashFn::name() + "_" + dataset::name(did) +
+                  ".csv",
               dataset.begin(), dataset.end(), hist_bucket_cnt);
     model(fn,
-          "stats/10M/models/" + HashFn::name() + "_" + dataset::name(did) +
-              ".csv",
+          "stats/" + std::to_string(dataset_size / 1000000) + "M/models/" +
+              HashFn::name() + "_" + dataset::name(did) + ".csv",
           dataset.begin(), dataset.end());
   }
 }
@@ -88,8 +90,10 @@ int main() {
   using RMI = learned_hashing::RMIHash<std::uint64_t, 1000000>;
   using MonotoneRMI = learned_hashing::MonotoneRMIHash<std::uint64_t, 1000000>;
 
-  export_all_ds<RMI>();
-  export_all_ds<MonotoneRMI>();
+  for (auto dataset_size : {10000000, 100000000}) {
+    export_all_ds<RMI>(dataset_size);
+    export_all_ds<MonotoneRMI>(dataset_size);
+  }
 
   return 0;
 }
