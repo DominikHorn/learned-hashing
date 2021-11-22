@@ -36,3 +36,7 @@ gtest_discover_tests(lh_tests)
 # ==== Benchmark executable ====
 add_executable(lh_benchmarks benchmarks.cpp)
 target_link_libraries(lh_benchmarks PRIVATE learned-hashing ${GOOGLEBENCHMARK_LIBRARY})
+
+# ==== Function Stats executable ====
+add_executable(lh_stats stats.cpp)
+target_link_libraries(lh_stats PRIVATE learned-hashing)
