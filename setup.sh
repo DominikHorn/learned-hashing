@@ -10,7 +10,7 @@ git submodule init && git submodule update
 
 # Parse arguments
 BUILD_TYPE=${1:-"RELEASE"}
-BUILD_DIR="cmake-build-$(echo "${BUILD_TYPE}" | awk '{print tolower($0)}')/"
+BUILD_DIR="cmake-build-$(echo "${BUILD_TYPE}" | awk '{print tolower($0)}')"
 
 # Generate cmake project files
 cmake \

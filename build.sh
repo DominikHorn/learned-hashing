@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 # Parse arguments
 TARGET=${1:-"lh_benchmarks"}
 BUILD_TYPE=${2:-"RELEASE"}
-BUILD_DIR="cmake-build-$(echo "${BUILD_TYPE}" | awk '{print tolower($0)}')/"
+BUILD_DIR="cmake-build-$(echo "${BUILD_TYPE}" | awk '{print tolower($0)}')"
 
 # Generate cmake project files
 cmake \
