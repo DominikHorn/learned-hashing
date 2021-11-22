@@ -2,15 +2,12 @@ import plotly.express as px
 import pandas as pd
 import sys
 import os
+import concurrent
 
-if len(sys.argv) < 2:
-    print("Please specify the csv files to plot")
-    exit(-1)
 
-for ds in sys.argv[1:]:
+def plot(ds):
     # read and prepare data
     df = pd.read_csv(ds)
-
     fig = px.line(df, x="bucket_lower", y="bucket_value", title=f"{ds} ({len(df)} buckets)")
     fig.write_image(f"{os.path.splitext(ds)[0]}.png", scale=2)
 
@@ -18,3 +15,11 @@ for ds in sys.argv[1:]:
     #df['bucket_value_sum'] /= df['bucket_value_sum'].max()
     #fig = px.line(df, x="bucket_lower", y="bucket_value_sum", title=f"{ds} ({len(df)} buckets)")
     #fig.show()
+
+if len(sys.argv) < 2:
+    print("Please specify the csv files to plot")
+    exit(-1)
+
+executor = concurrent.futures.ProcessPoolExecutor(20)
+futures = [executor.submit(plot, ds) for ds in sys.argv[1:]]
+concurrent.futures.wait(futures)
