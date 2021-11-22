@@ -2,8 +2,7 @@ import plotly.express as px
 import pandas as pd
 import sys
 import os
-import concurrent
-
+import concurrent.futures
 
 def plot(ds):
     # read and prepare data
