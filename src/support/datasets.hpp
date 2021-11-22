@@ -126,10 +126,8 @@ inline std::string name(ID id) {
 
 template <class Data = std::uint64_t>
 std::vector<Data> load_cached(ID id, size_t dataset_size) {
-  // // TODO: tmp
-  // static std::random_device rd;
-  // static std::default_random_engine rng(rd());
-  static std::default_random_engine rng(1234);
+  static std::random_device rd;
+  static std::default_random_engine rng(rd());
 
   // cache generated & sampled datasets to speed up repeated benchmarks
   static std::unordered_map<ID, std::unordered_map<size_t, std::vector<Data>>>
@@ -162,16 +160,29 @@ std::vector<Data> load_cached(ID id, size_t dataset_size) {
       break;
     }
     case ID::UNIFORM: {
-      std::uniform_int_distribution<Data> dist(
-          0, std::numeric_limits<Data>::max() - 1);
+      std::uniform_int_distribution<Data> dist(0, (0x1LLU << 50) - 1);
       for (size_t i = 0; i < ds.size(); i++) ds[i] = dist(rng);
       break;
     }
     case ID::NORMAL: {
-      std::normal_distribution<> dist(
-          static_cast<double>(std::numeric_limits<Data>::max()) / 2.0,
-          ds.size());
-      for (size_t i = 0; i < ds.size(); i++) ds[i] = dist(rng);
+      const auto mean = 100.0;
+      const auto std_dev = 20.0;
+      std::normal_distribution<> dist(mean, std_dev);
+      for (size_t i = 0; i < ds.size(); i++) {
+        // cutoff after 3 * std_dev
+        const auto rand_val = std::max(mean - 3 * std_dev,
+                                       std::min(mean + 3 * std_dev, dist(rng)));
+
+        assert(rand_val >= mean - 3 * std_dev);
+        assert(rand_val <= mean + 3 * std_dev);
+
+        // rescale to [0, 2^50)
+        const auto rescaled =
+            (rand_val - (mean - 3 * std_dev)) * std::pow(2, 50);
+
+        // round
+        ds[i] = std::floor(rescaled);
+      }
     }
     case ID::FB: {
       if (ds_fb.empty()) {
@@ -211,6 +222,12 @@ std::vector<Data> load_cached(ID id, size_t dataset_size) {
           "invalid datastet id " +
           std::to_string(static_cast<std::underlying_type<ID>::type>(id)));
   }
+
+  // since std::numeric_limits<Data> is special (e.g., used as Sentinel),
+  // systematically remove this from datasets with minimal impact on the
+  // underlying distribution.
+  for (auto& key : ds)
+    if (key == std::numeric_limits<Data>::max()) key--;
 
   // deduplicate, sort before caching to avoid additional work in the future
   deduplicate_and_sort(ds);
