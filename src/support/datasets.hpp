@@ -183,6 +183,7 @@ std::vector<Data> load_cached(ID id, size_t dataset_size) {
         // round
         ds[i] = std::floor(rescaled);
       }
+      break;
     }
     case ID::FB: {
       if (ds_fb.empty()) {
