@@ -11,7 +11,6 @@ add_library(${PROJECT_NAME} INTERFACE)
 target_sources(${PROJECT_NAME} INTERFACE learned_hashing.hpp include/)
 target_include_directories(${PROJECT_NAME} INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
-target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 
 # Enable OpenMP if available
 include(CheckCXXCompilerFlag)
