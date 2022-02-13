@@ -19,17 +19,17 @@ class RadixSplineHash {
   /// internal model, a radix spline
   _rs::RadixSpline<Data> spline;
 
- public:
+public:
   RadixSplineHash() = default;
 
   template <class RandomIt>
-  RadixSplineHash(const RandomIt& sample_begin, const RandomIt& sample_end,
+  RadixSplineHash(const RandomIt &sample_begin, const RandomIt &sample_end,
                   const size_t full_size) {
     train(sample_begin, sample_end, full_size);
   }
 
   template <class RandomIt>
-  void train(const RandomIt& sample_begin, const RandomIt& sample_end,
+  void train(const RandomIt &sample_begin, const RandomIt &sample_end,
              const size_t full_size) {
     // output \in [0, sample_size] -> multiply with (full_size / sample_size)
     out_scale_fac =
@@ -40,7 +40,8 @@ class RadixSplineHash {
     const Data min = *sample_begin;
     const Data max = *(sample_end - 1);
     _rs::Builder<Data> rsb(min, max, NumRadixBits, MaxError);
-    for (auto it = sample_begin; it < sample_end; it++) rsb.AddKey(*it);
+    for (auto it = sample_begin; it < sample_end; it++)
+      rsb.AddKey(*it);
 
     // actually build radix spline
     spline = rsb.Finalize();
@@ -53,10 +54,8 @@ class RadixSplineHash {
                                " > " + std::to_string(MaxModels));
   }
 
-  template <class Result = size_t>
-  forceinline Result operator()(const Data& key) const {
-    return static_cast<Result>(spline.GetEstimatedPosition(key) *
-                               out_scale_fac);
+  forceinline size_t operator()(const Data &key) const {
+    return spline.GetEstimatedPosition(key) * out_scale_fac;
   }
 
   size_t model_count() const { return spline.spline_points_.size(); }
@@ -70,4 +69,4 @@ class RadixSplineHash {
            std::to_string(NumRadixBits);
   }
 };
-}  // namespace learned_hashing
+} // namespace learned_hashing
