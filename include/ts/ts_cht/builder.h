@@ -10,10 +10,13 @@
 namespace ts_cht {
 
 // Build a `CompactHistTree`.
-template <class KeyType> class Builder {
-public:
+template <class KeyType>
+class Builder {
+ public:
   Builder(KeyType min_key, KeyType max_key)
-      : min_key_(min_key), max_key_(max_key), curr_num_keys_(0),
+      : min_key_(min_key),
+        max_key_(max_key),
+        curr_num_keys_(0),
         prev_key_(min_key) {}
 
   // Adds a key. Assumes that keys are stored in a dense array.
@@ -24,7 +27,7 @@ public:
 
     // Add the new key.
     keys_.push_back(key);
-
+  
     ++curr_num_keys_;
     prev_key_ = key;
   }
@@ -45,24 +48,23 @@ public:
     // And also the initial shift for the first node of the tree.
     assert(lg >= log_num_bins_);
     shift_ = lg - log_num_bins_;
-
+  
     // And build.
     // TODO: build faster (use trick with lcp)!
     // TODO: cache-oblivious!
     // TODO: build radix table directly!
     BuildOffline();
 
-    // Flatten directly falls back to a radix table, in case CHT contains only
-    // one node.
+    // Flatten directly falls back to a radix table, in case CHT contains only one node.
     bool single_layer = Flatten();
 
     // And return the adaptive CHT.
-    return CompactHistTree<KeyType>(single_layer, min_key_, max_key_,
-                                    curr_num_keys_, num_bins_, log_num_bins_,
-                                    max_error_, shift_, std::move(table_));
+    return CompactHistTree<KeyType>(single_layer, min_key_, max_key_, curr_num_keys_,
+                                    num_bins_, log_num_bins_, max_error_,
+                                    shift_, std::move(table_));
   }
 
-private:
+ private:
   static constexpr unsigned Infinity = std::numeric_limits<unsigned>::max();
   static constexpr unsigned Leaf = (1u << 31);
   static constexpr unsigned Mask = Leaf - 1;
@@ -90,15 +92,13 @@ private:
   // and the smallest key. KeyType == uint32_t.
   static size_t GetNumShiftBits(uint32_t diff, size_t num_radix_bits) {
     const uint32_t clz = __builtin_clz(diff);
-    if ((32 - clz) < num_radix_bits)
-      return 0;
+    if ((32 - clz) < num_radix_bits) return 0;
     return 32 - num_radix_bits - clz;
   }
   // KeyType == uint64_t.
   static size_t GetNumShiftBits(uint64_t diff, size_t num_radix_bits) {
     const uint32_t clzl = __builtin_clzl(diff);
-    if ((64 - clzl) < num_radix_bits)
-      return 0;
+    if ((64 - clzl) < num_radix_bits) return 0;
     return 64 - num_radix_bits - clzl;
   }
 
@@ -193,7 +193,7 @@ private:
   }
 
   // Flatten the layout of the tree.
-  bool Flatten() {
+  bool Flatten() {    
     // Transform into radix table if there is only one node.
     if (tree_.size() == 1) {
       TransformIntoRadixTable();
@@ -223,7 +223,7 @@ private:
   bool CacheObliviousFlatten() {
     // Build the precendence graph between nodes.
     assert(!tree_.empty());
-
+    
     // Transform into radix table if there is only one node.
     if (tree_.size() == 1) {
       TransformIntoRadixTable();
@@ -335,16 +335,16 @@ private:
     return false;
   }
 
+  // Transform a single-node tree into a radix table.
   void TransformIntoRadixTable() {
     assert(tree_.size() == 1);
     num_radix_bits_ = log_num_bins_;
     num_shift_bits_ = GetNumShiftBits(max_key_ - min_key_, num_radix_bits_);
     const uint32_t max_prefix = (max_key_ - min_key_) >> num_shift_bits_;
     table_.resize(max_prefix + 2, 0);
-    for (size_t index = 0, limit = table_.size(); index != limit; ++index) {
-      assert(tree_.front().second.size() > index); // catch oob access
+    for (size_t index = 0, limit = std::min(num_bins_, table_.size()); index != limit; ++index)
       table_[index] = (tree_.front().second[index].first & Mask);
-    }
+    table_.back() = curr_num_keys_;
     shift_ = num_shift_bits_;
   }
 
@@ -353,7 +353,7 @@ private:
   size_t num_bins_;
   size_t log_num_bins_;
   size_t max_error_;
-
+  
   size_t curr_num_keys_;
   KeyType prev_key_;
   size_t shift_;
@@ -366,4 +366,4 @@ private:
   std::vector<std::pair<Info, std::vector<Range>>> tree_;
 };
 
-} // namespace ts_cht
+}  // namespace cht
