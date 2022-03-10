@@ -15,7 +15,7 @@ template <class Data, size_t max_error = 16> class TrieSplineHash {
   ts::TrieSpline<Data> _spline;
 
 public:
-  TrieSplineHash() = default;
+  TrieSplineHash() noexcept = default;
 
   template <class RandomIt>
   TrieSplineHash(const RandomIt &sample_begin, const RandomIt &sample_end,
@@ -23,8 +23,9 @@ public:
     train(sample_begin, sample_end, full_size);
   }
 
-  template <class RandomIt>
-  void train(const RandomIt &sample_begin, const RandomIt &sample_end,
+  /// [sample_begin, sample_end) must be sorted
+  template <class ForwardIt>
+  void train(const ForwardIt &sample_begin, const ForwardIt &sample_end,
              const size_t &full_size) {
     const auto sample_size = std::distance(sample_begin, sample_end);
     // output \in [0, sample_size] -> multiply with (full_size / sample_size)
