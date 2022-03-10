@@ -22,7 +22,7 @@ TEST(TrieSpline, IsMonotoneForNonKeys) {
   };
 
   for (const auto &dataset : datasets) {
-    // build monotone rmi model
+    // build monotone ts model
     const learned_hashing::TrieSplineHash<Data> ts(
         dataset.begin(), dataset.end(), dataset.size());
 
