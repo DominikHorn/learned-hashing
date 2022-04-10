@@ -11,15 +11,21 @@ namespace learned_hashing {
 template <typename T, size_t Epsilon, size_t EpsilonRecursive,
           const size_t MaxModels = std::numeric_limits<size_t>::max(),
           typename Floating = float>
-struct PGMHash : public pgm::PGMIndex<T, Epsilon, EpsilonRecursive, Floating> {
- private:
-  using Parent = pgm::PGMIndex<T, Epsilon, EpsilonRecursive, Floating>;
+struct PGMHash {
+private:
+  pgm::PGMIndex<T, Epsilon, EpsilonRecursive, Floating> pgm_;
 
-  const T first_key;
-  const size_t sample_size;
-  const size_t N;
+  T first_key_;
+  size_t sample_size_, N_;
 
- public:
+public:
+  /**
+   * Constructor that produces null PGMHash.
+   * Use `fit()` to initialize.
+   */
+
+  PGMHash() noexcept = default;
+
   /**
    * Constructs based on the sorted keys in the range [first, last). Note that
    * contrary to PGMIndex, a sample of the keys suffices.
@@ -29,21 +35,39 @@ struct PGMHash : public pgm::PGMIndex<T, Epsilon, EpsilonRecursive, Floating> {
    * @param full_size the output range of the hash function [0, full_size)
    */
   template <typename RandomIt>
-  PGMHash(const RandomIt& sample_begin, const RandomIt& sample_end,
-          const size_t full_size)
-      : Parent(sample_begin, sample_end),
-        first_key(*sample_begin),
-        sample_size(std::distance(sample_begin, sample_end)),
-        N(full_size - 1) {
-    if (this->segments.size() > MaxModels) {
+  PGMHash(const RandomIt &sample_begin, const RandomIt &sample_end,
+          const size_t full_size) {
+    fit(sample_begin, sample_end, full_size);
+  }
+
+  /**
+   * Fits this PGMHash instance to a certain data distribution based on a
+  sample.
+   *
+   * @param sample_begin iterator to first element of the sample
+   * @param sample_end past the end iterator for sample
+   * @param full_size actual full dataset size
+   */
+  template <class RandomIt>
+  void fit(const RandomIt &sample_begin, const RandomIt &sample_end,
+           const size_t full_size) {
+    first_key_ = *sample_begin;
+    sample_size_ = std::distance(sample_begin, sample_end);
+    N_ = full_size - 1;
+
+    pgm_ = decltype(pgm_)(sample_begin, sample_end);
+    if (pgm_.segments.size() > MaxModels) {
       throw std::runtime_error("PGM " + name() +
                                " had more models than allowed: " +
-                               std::to_string(this->segments.size()) + " > " +
+                               std::to_string(pgm_.segments.size()) + " > " +
                                std::to_string(MaxModels));
     }
   }
 
-  size_t model_count() { return this->segments.size(); }
+  /**
+   * Size of PGM model in bytes
+   */
+  size_t model_count() { return pgm_.segments.size(); }
 
   /**
    * Human readable name useful, e.g., to log measured results
@@ -73,14 +97,14 @@ struct PGMHash : public pgm::PGMIndex<T, Epsilon, EpsilonRecursive, Floating> {
    * @return
    */
   template <typename Result = size_t, typename Precision = double>
-  forceinline Result operator()(const T& key) const {
+  forceinline Result operator()(const T &key) const {
     // Otherwise pgm will EXC_BAD_ACCESS
     if (unlikely(key == std::numeric_limits<T>::max())) {
-      return N;
+      return N_;
     }
 
-    auto k = std::max(first_key, key);
-    auto it = this->segment_for_key(k);
+    auto k = std::max(first_key_, key);
+    auto it = pgm_.segment_for_key(k);
 
     // compute estimated pos (contrary to standard PGM, don't just throw slope
     // precision away)
@@ -88,9 +112,9 @@ struct PGMHash : public pgm::PGMIndex<T, Epsilon, EpsilonRecursive, Floating> {
     auto segment_pos =
         static_cast<Precision>(it->slope * (k - first_key_in_segment)) +
         it->intercept;
-    Precision relative_pos = segment_pos / static_cast<double>(sample_size);
+    Precision relative_pos = segment_pos / static_cast<double>(sample_size_);
     auto global_pos =
-        static_cast<Result>(static_cast<Precision>(N) * relative_pos);
+        static_cast<Result>(static_cast<Precision>(N_) * relative_pos);
 
     // TODO: standard pgm algorithm limits returned segment pos to at max
     // intercept of next
@@ -100,4 +124,4 @@ struct PGMHash : public pgm::PGMIndex<T, Epsilon, EpsilonRecursive, Floating> {
     return global_pos;
   }
 };
-}  // namespace learned_hashing
+} // namespace learned_hashing

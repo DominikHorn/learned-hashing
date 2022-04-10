@@ -24,8 +24,8 @@ include(FetchContent)
 
 FetchContent_Declare(
   pgm
-  GIT_REPOSITORY https://github.com/gvinciguerra/PGM-index.git
-  GIT_TAG 3780dc966f387c5224ec58147307df1486e64737
+  GIT_REPOSITORY https://github.com/DominikHorn/PGM-index 
+  GIT_TAG 27bb71a
   )
 
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
