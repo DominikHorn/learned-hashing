@@ -51,7 +51,8 @@ class RadixSpline {
     const double slope = y_diff / x_diff;
 
     // Interpolate.
-    const double key_diff = key - down.x;
+    const uint64_t key_diff = key - down.x;
+
     return std::fma(key_diff, slope, down.y);
   }
 

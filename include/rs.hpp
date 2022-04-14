@@ -54,9 +54,16 @@ public:
                                " > " + std::to_string(MaxModels));
   }
 
-  forceinline size_t operator()(const Data &key) const {
-    return spline.GetEstimatedPosition(key) * out_scale_fac;
+  template <class Result = size_t>
+  forceinline Result operator()(const Data &key) const {
+    return static_cast<Result>(
+        static_cast<uint64_t>(spline.GetEstimatedPosition(key)) *
+        out_scale_fac);
   }
+
+  uint64_t rs_pos(const Data &key) { return spline.GetEstimatedPosition(key); }
+
+  double get_scale_out_factor() { return out_scale_fac; }
 
   size_t model_count() const { return spline.spline_points_.size(); }
 
