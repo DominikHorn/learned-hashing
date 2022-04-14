@@ -337,6 +337,19 @@ public:
 
   size_t model_count() { return 1 + second_level_models.size(); }
 
+  forceinline double double_prediction(const Key &key) const {
+    if (MaxSecondLevelModelCount == 0)
+      return root_model(key, max_output);
+
+    const auto second_level_index =
+        root_model(key, second_level_models.size() - 1);
+    const double result =
+        second_level_models[second_level_index].normalized(key);
+
+    // assert(result <= max_output);
+    return result;
+  }
+
   /**
    * Compute hash value for key
    *
