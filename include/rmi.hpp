@@ -14,62 +14,62 @@
 #include "convenience/builtins.hpp"
 
 namespace learned_hashing {
-template <class X, class Y>
-struct DatapointImpl {
+template <class X, class Y> struct DatapointImpl {
   X x;
   Y y;
 
   DatapointImpl(const X x, const Y y) : x(x), y(y) {}
 };
 
-template <class Key, class Precision>
-struct LinearImpl {
- protected:
+template <class Key, class Precision> struct LinearImpl {
+protected:
   Precision slope = 0, intercept = 0;
 
- private:
+private:
   using Datapoint = DatapointImpl<Key, Precision>;
 
-  static forceinline Precision compute_slope(const Datapoint& min,
-                                             const Datapoint& max) {
-    if (min.x == max.x) return 0;
+  static forceinline Precision compute_slope(const Datapoint &min,
+                                             const Datapoint &max) {
+    if (min.x == max.x)
+      return 0;
 
     // slope = delta(y)/delta(x)
     return ((max.y - min.y) / (max.x - min.x));
   }
 
-  static forceinline Precision compute_intercept(const Datapoint& min,
-                                                 const Datapoint& max) {
+  static forceinline Precision compute_intercept(const Datapoint &min,
+                                                 const Datapoint &max) {
     // f(min.x) = min.y <=> slope * min.x + intercept = min.y <=> intercept =
     // min.y - slope * min.x
     return (min.y - compute_slope(min, max) * min.x);
   }
 
-  static forceinline Precision compute_slope(const Key& minX,
-                                             const Precision& minY,
-                                             const Key& maxX,
-                                             const Precision& maxY) {
-    if (minX == maxX) return 0;
+  static forceinline Precision compute_slope(const Key &minX,
+                                             const Precision &minY,
+                                             const Key &maxX,
+                                             const Precision &maxY) {
+    if (minX == maxX)
+      return 0;
 
     // slope = delta(y)/delta(x)
     return ((maxY - minY) / (maxX - minX));
   }
 
-  static forceinline Precision compute_intercept(const Key& minX,
-                                                 const Precision& minY,
-                                                 const Key& maxX,
-                                                 const Precision& maxY) {
+  static forceinline Precision compute_intercept(const Key &minX,
+                                                 const Precision &minY,
+                                                 const Key &maxX,
+                                                 const Precision &maxY) {
     // f(min.x) = min.y <=> slope * min.x + intercept = min.y <=> intercept =
     // min.y - slope * min.x
     return (minY - compute_slope(minX, minY, maxX, maxY) * minX);
   }
 
-  explicit LinearImpl(const Key& minX, const Precision& minY, const Key& maxX,
-                      const Precision& maxY)
+  explicit LinearImpl(const Key &minX, const Precision &minY, const Key &maxX,
+                      const Precision &maxY)
       : slope(compute_slope(minX, minY, maxX, maxY)),
         intercept(compute_intercept(minX, minY, maxX, maxY)) {}
 
- public:
+public:
   explicit LinearImpl(Precision slope = 0, Precision intercept = 0)
       : slope(slope), intercept(intercept) {}
 
@@ -80,7 +80,7 @@ struct LinearImpl {
    * @param datapoints *sorted* datapoints to 'train' on
    * @param output_range outputs will be in range [0, output_range]
    */
-  explicit LinearImpl(const std::vector<Datapoint>& datapoints)
+  explicit LinearImpl(const std::vector<Datapoint> &datapoints)
       : slope(compute_slope(datapoints.front(), datapoints.back())),
         intercept(compute_intercept(datapoints.front(), datapoints.back())) {
     assert(slope != NAN);
@@ -96,19 +96,19 @@ struct LinearImpl {
    * @param end last key contained in the training bucket
    */
   template <class It>
-  LinearImpl(const It& dataset_begin, const It& dataset_end, size_t begin,
+  LinearImpl(const It &dataset_begin, const It &dataset_end, size_t begin,
              size_t end)
-      : LinearImpl(
-            *(dataset_begin + begin),
-            static_cast<Precision>(begin) /
-                static_cast<Precision>(
-                    std::distance(dataset_begin, dataset_end)),
-            *(dataset_begin + end),
-            static_cast<Precision>(end) / static_cast<Precision>(std::distance(
-                                              dataset_begin, dataset_end))) {}
+      : LinearImpl(*(dataset_begin + begin),
+                   static_cast<Precision>(begin) /
+                       static_cast<Precision>(
+                           std::distance(dataset_begin, dataset_end)),
+                   *(dataset_begin + end),
+                   static_cast<Precision>(end) /
+                       static_cast<Precision>(
+                           std::distance(dataset_begin, dataset_end))) {}
 
   template <class It>
-  LinearImpl(const It& dataset_begin, const It& dataset_end, size_t /*begin*/,
+  LinearImpl(const It &dataset_begin, const It &dataset_end, size_t /*begin*/,
              size_t end, Key prev_max_x, Precision prev_max_y)
       : LinearImpl(
             prev_max_x, prev_max_y,
@@ -121,10 +121,12 @@ struct LinearImpl {
   /**
    * computes y \in [0, 1] given a certain x
    */
-  forceinline Precision normalized(const Key& k) const {
+  forceinline Precision normalized(const Key &k) const {
     const auto res = slope * k + intercept;
-    if (res > 1.0) return 1.0;
-    if (res < 0.0) return 0.0;
+    if (res > 1.0)
+      return 1.0;
+    if (res < 0.0)
+      return 0.0;
     return res;
   }
 
@@ -146,7 +148,7 @@ struct LinearImpl {
    * std::numeric_limits<Precision>::max()
    */
   forceinline size_t
-  operator()(const Key& k, const Precision& max_value =
+  operator()(const Key &k, const Precision &max_value =
                                std::numeric_limits<Precision>::max()) const {
     // +0.5 as a quick&dirty ceil trick
     const size_t pred = max_value * normalized(k) + 0.5;
@@ -182,7 +184,7 @@ class RMIHash {
   /// output range is scaled from [0, 1] to [0, max_output] = [0, full_size)
   size_t max_output = 0;
 
- public:
+public:
   /**
    * Constructs an empty, untrained RMI. to train, manually
    * train by invoking the train() function
@@ -200,7 +202,7 @@ class RMIHash {
    *    while end result is the same (! tested on various datasets)
    */
   template <class RandomIt>
-  RMIHash(const RandomIt& sample_begin, const RandomIt& sample_end,
+  RMIHash(const RandomIt &sample_begin, const RandomIt &sample_end,
           const size_t full_size, bool faster_construction = true) {
     train(sample_begin, sample_end, full_size, faster_construction);
   }
@@ -217,15 +219,17 @@ class RMIHash {
    *    while end result is the same (! tested on various datasets)
    */
   template <class RandomIt>
-  void train(const RandomIt& sample_begin, const RandomIt& sample_end,
+  void train(const RandomIt &sample_begin, const RandomIt &sample_end,
              const size_t full_size, bool faster_construction = true) {
     this->max_output = full_size - 1;
     const size_t sample_size = std::distance(sample_begin, sample_end);
-    if (sample_size == 0) return;
+    if (sample_size == 0)
+      return;
 
     root_model =
         decltype(root_model)(sample_begin, sample_end, 0, sample_size - 1);
-    if (MaxSecondLevelModelCount == 0) return;
+    if (MaxSecondLevelModelCount == 0)
+      return;
 
     // ensure that there is at least MinAvgDatapointsPerModel datapoints per
     // model on average to not waste space/resources
@@ -275,7 +279,7 @@ class RMIHash {
         const auto key = *it;
         const auto second_level_index =
             root_model(key, second_level_models.size() - 1);
-        auto& bucket = training_buckets[second_level_index];
+        auto &bucket = training_buckets[second_level_index];
 
         // The following works because the previous training bucket has to be
         // completed, because the sample is sorted: Each training bucket's min
@@ -290,9 +294,9 @@ class RMIHash {
         }
 
         // Add datapoint at the end of the bucket
-        bucket.push_back(Datapoint(
-            key,
-            static_cast<Precision>(i) / static_cast<Precision>(sample_size)));
+        bucket.push_back(
+            Datapoint(key, static_cast<Precision>(i) /
+                               static_cast<Precision>(sample_size)));
       }
 
       // Edge case: First model does not have enough training data -> add
@@ -305,7 +309,7 @@ class RMIHash {
       // Train each second level model on its respective bucket
       for (size_t model_idx = 0; model_idx < second_level_models.size();
            model_idx++) {
-        auto& training_bucket = training_buckets[model_idx];
+        auto &training_bucket = training_buckets[model_idx];
 
         // Propagate datapoints from previous training bucket if necessary
         while (training_bucket.size() < 2) {
@@ -340,8 +344,9 @@ class RMIHash {
    * @param key
    */
   template <class Result = size_t>
-  forceinline Result operator()(const Key& key) const {
-    if (MaxSecondLevelModelCount == 0) return root_model(key, max_output);
+  forceinline Result operator()(const Key &key) const {
+    if (MaxSecondLevelModelCount == 0)
+      return root_model(key, max_output);
 
     const auto second_level_index =
         root_model(key, second_level_models.size() - 1);
@@ -352,13 +357,15 @@ class RMIHash {
     return result;
   }
 
-  bool operator==(const RMIHash& other) const {
-    if (other.root_model != root_model) return false;
+  bool operator==(const RMIHash &other) const {
+    if (other.root_model != root_model)
+      return false;
     if (other.second_level_models.size() != second_level_models.size())
       return false;
 
     for (size_t i = 0; i < second_level_models.size(); i++)
-      if (other.second_level_models[i] != second_level_models[i]) return false;
+      if (other.second_level_models[i] != second_level_models[i])
+        return false;
 
     return true;
   }
@@ -386,7 +393,7 @@ class MonotoneRMIHash {
   /// output range is scaled from [0, 1] to [0, max_output] = [0, full_size)
   size_t full_size = 0;
 
- public:
+public:
   /**
    * Constructs an empty, untrained RMI. to train, manually
    * train by invoking the train() function
@@ -401,7 +408,7 @@ class MonotoneRMIHash {
    * @param full_size operator() will extrapolate to [0, full_size)
    */
   template <class RandomIt>
-  MonotoneRMIHash(const RandomIt& sample_begin, const RandomIt& sample_end,
+  MonotoneRMIHash(const RandomIt &sample_begin, const RandomIt &sample_end,
                   const size_t full_size) {
     train(sample_begin, sample_end, full_size);
   }
@@ -415,11 +422,12 @@ class MonotoneRMIHash {
    * @param full_size operator() will extrapolate to [0, full_size)
    */
   template <class RandomIt>
-  void train(const RandomIt& sample_begin, const RandomIt& sample_end,
+  void train(const RandomIt &sample_begin, const RandomIt &sample_end,
              const size_t full_size) {
     this->full_size = full_size;
     const size_t sample_size = std::distance(sample_begin, sample_end);
-    if (sample_size == 0) return;
+    if (sample_size == 0)
+      return;
 
     // train root model
     root_model = decltype(root_model)(sample_begin, sample_end, 0,
@@ -429,7 +437,8 @@ class MonotoneRMIHash {
     assert(root_model.normalized(*(sample_end - 1)) >= 0.9999);
 
     // special case: single level model
-    if (MaxSecondLevelModelCount == 0) return;
+    if (MaxSecondLevelModelCount == 0)
+      return;
 
     // ensure that there is at least MinAvgDatapointsPerModel datapoints per
     // model on average to not waste space/resources
@@ -440,13 +449,15 @@ class MonotoneRMIHash {
     // i such that monotony is retained even for non-keys that fit in between
     // actual keys present in the dataset
     const auto true_min_x = [&](const size_t i) {
-      if (i == 0) return *sample_begin;
+      if (i == 0)
+        return *sample_begin;
       return root_model.normalized_inverse(
           static_cast<double>(i) /
           static_cast<double>(second_level_models.size()));
     };
     const auto true_min_y = [&](const size_t i, const size_t i_min_x) {
-      if (i == 0) return 0.0;
+      if (i == 0)
+        return 0.0;
       const auto prev_max_y = second_level_models[i - 1].normalized(i_min_x);
       return prev_max_y;
     };
@@ -503,8 +514,9 @@ class MonotoneRMIHash {
    * @param key
    */
   template <class Result = size_t>
-  forceinline Result operator()(const Key& key) const {
-    if (MaxSecondLevelModelCount == 0) return root_model(key, full_size);
+  forceinline Result operator()(const Key &key) const {
+    if (MaxSecondLevelModelCount == 0)
+      return root_model(key, full_size);
 
     const size_t second_level_index =
         root_model.normalized(key) * second_level_models.size();
@@ -518,5 +530,4 @@ class MonotoneRMIHash {
     return res - ((res >= full_size) & 0x1);
   }
 };
-}  // namespace learned_hashing
-
+} // namespace learned_hashing
