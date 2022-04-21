@@ -37,7 +37,7 @@ public:
   template <typename RandomIt>
   PGMHash(const RandomIt &sample_begin, const RandomIt &sample_end,
           const size_t full_size) {
-    fit(sample_begin, sample_end, full_size);
+    train(sample_begin, sample_end, full_size);
   }
 
   /**
@@ -49,8 +49,8 @@ public:
    * @param full_size actual full dataset size
    */
   template <class RandomIt>
-  void fit(const RandomIt &sample_begin, const RandomIt &sample_end,
-           const size_t full_size) {
+  void train(const RandomIt &sample_begin, const RandomIt &sample_end,
+             const size_t full_size) {
     first_key_ = *sample_begin;
     sample_size_ = std::distance(sample_begin, sample_end);
     N_ = full_size - 1;
