@@ -69,7 +69,7 @@ public:
    */
   size_t model_count() const { return pgm_.segments.size(); }
 
-  size_t byte_size() const { return 2 * this->segments.size(); }
+  size_t byte_size() const { return pgm_.size_in_bytes(); }
 
   /**
    * Human readable name useful, e.g., to log measured results
