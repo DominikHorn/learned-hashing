@@ -105,24 +105,9 @@ public:
       return N_;
     }
 
-    auto k = std::max(first_key_, key);
-    auto it = pgm_.segment_for_key(k);
-
-    // compute estimated pos (contrary to standard PGM, don't just throw slope
-    // precision away)
-    const auto first_key_in_segment = it->key;
-    auto segment_pos =
-        static_cast<Precision>(it->slope * (k - first_key_in_segment)) +
-        it->intercept;
-    Precision relative_pos = segment_pos / static_cast<double>(sample_size_);
+    const auto bounds = pgm_.search(key);
     auto global_pos =
-        static_cast<Result>(static_cast<Precision>(N_) * relative_pos);
-
-    // TODO: standard pgm algorithm limits returned segment pos to at max
-    // intercept of next
-    //    slope segment. Maybe we should do something similar?
-    //         auto pos = std::min<size_t>((*it)(k), std::next(it)->intercept);
-
+        static_cast<Result>(static_cast<Precision>(N_) * bounds.pos);
     return global_pos;
   }
 };
