@@ -16,7 +16,7 @@ private:
   pgm::PGMIndex<T, Epsilon, EpsilonRecursive, Floating> pgm_;
 
   T first_key_;
-  size_t sample_size_, N_;
+  double scale_fac_;
 
 public:
   /**
@@ -52,8 +52,10 @@ public:
   void train(const RandomIt &sample_begin, const RandomIt &sample_end,
              const size_t full_size) {
     first_key_ = *sample_begin;
-    sample_size_ = std::distance(sample_begin, sample_end);
-    N_ = full_size - 1;
+
+    const auto sample_size_ = std::distance(sample_begin, sample_end);
+    scale_fac_ =
+        static_cast<double>(full_size) / static_cast<double>(sample_size_);
 
     pgm_ = decltype(pgm_)(sample_begin, sample_end);
     if (pgm_.segments.size() > MaxModels) {
@@ -105,13 +107,13 @@ public:
   forceinline Result operator()(const T &key) const {
     // Otherwise pgm will EXC_BAD_ACCESS
     if (unlikely(key == std::numeric_limits<T>::max())) {
-      return N_;
+      return std::numeric_limits<T>::max();
     }
 
-    const auto bounds = pgm_.search(key);
-    auto global_pos =
-        static_cast<Result>(static_cast<Precision>(N_) * bounds.pos);
-    return global_pos;
+    return pgm_.search(key).pos;
+    // const auto bounds = pgm_.search(key);
+    // auto global_pos = static_cast<Result>(scale_fac_ * bounds.pos);
+    // return global_pos;
   }
 };
 } // namespace learned_hashing
