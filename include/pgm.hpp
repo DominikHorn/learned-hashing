@@ -65,10 +65,13 @@ public:
   }
 
   /**
-   * Size of PGM model in bytes
+   * Amount of models in PGM
    */
   size_t model_count() const { return pgm_.segments.size(); }
 
+  /**
+   * Size of PGM model in bytes
+   */
   size_t byte_size() const { return pgm_.size_in_bytes(); }
 
   /**
