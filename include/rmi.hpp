@@ -14,24 +14,25 @@
 #include "convenience/builtins.hpp"
 
 namespace learned_hashing {
-template <class X, class Y> struct DatapointImpl {
+template <class X, class Y>
+struct DatapointImpl {
   X x;
   Y y;
 
   DatapointImpl(const X x, const Y y) : x(x), y(y) {}
 };
 
-template <class Key, class Precision> struct LinearImpl {
-protected:
+template <class Key, class Precision>
+struct LinearImpl {
+ protected:
   Precision slope = 0, intercept = 0;
 
-private:
+ private:
   using Datapoint = DatapointImpl<Key, Precision>;
 
   static forceinline Precision compute_slope(const Datapoint &min,
                                              const Datapoint &max) {
-    if (min.x == max.x)
-      return 0;
+    if (min.x == max.x) return 0;
 
     // slope = delta(y)/delta(x)
     return ((max.y - min.y) / (max.x - min.x));
@@ -48,8 +49,7 @@ private:
                                              const Precision &minY,
                                              const Key &maxX,
                                              const Precision &maxY) {
-    if (minX == maxX)
-      return 0;
+    if (minX == maxX) return 0;
 
     // slope = delta(y)/delta(x)
     return ((maxY - minY) / (maxX - minX));
@@ -69,7 +69,7 @@ private:
       : slope(compute_slope(minX, minY, maxX, maxY)),
         intercept(compute_intercept(minX, minY, maxX, maxY)) {}
 
-public:
+ public:
   explicit LinearImpl(Precision slope = 0, Precision intercept = 0)
       : slope(slope), intercept(intercept) {}
 
@@ -98,14 +98,14 @@ public:
   template <class It>
   LinearImpl(const It &dataset_begin, const It &dataset_end, size_t begin,
              size_t end)
-      : LinearImpl(*(dataset_begin + begin),
-                   static_cast<Precision>(begin) /
-                       static_cast<Precision>(
-                           std::distance(dataset_begin, dataset_end)),
-                   *(dataset_begin + end),
-                   static_cast<Precision>(end) /
-                       static_cast<Precision>(
-                           std::distance(dataset_begin, dataset_end))) {}
+      : LinearImpl(
+            *(dataset_begin + begin),
+            static_cast<Precision>(begin) /
+                static_cast<Precision>(
+                    std::distance(dataset_begin, dataset_end)),
+            *(dataset_begin + end),
+            static_cast<Precision>(end) / static_cast<Precision>(std::distance(
+                                              dataset_begin, dataset_end))) {}
 
   template <class It>
   LinearImpl(const It &dataset_begin, const It &dataset_end, size_t /*begin*/,
@@ -123,10 +123,8 @@ public:
    */
   forceinline Precision normalized(const Key &k) const {
     const auto res = slope * k + intercept;
-    if (res > 1.0)
-      return 1.0;
-    if (res < 0.0)
-      return 0.0;
+    if (res > 1.0) return 1.0;
+    if (res < 0.0) return 0.0;
     return res;
   }
 
@@ -184,7 +182,7 @@ class RMIHash {
   /// output range is scaled from [0, 1] to [0, max_output] = [0, full_size)
   size_t max_output = 0;
 
-public:
+ public:
   /**
    * Constructs an empty, untrained RMI. to train, manually
    * train by invoking the train() function
@@ -223,18 +221,17 @@ public:
              const size_t full_size, bool faster_construction = true) {
     this->max_output = full_size - 1;
     const size_t sample_size = std::distance(sample_begin, sample_end);
-    if (sample_size == 0)
-      return;
+    if (sample_size == 0) return;
 
     root_model =
         decltype(root_model)(sample_begin, sample_end, 0, sample_size - 1);
-    if (MaxSecondLevelModelCount == 0)
-      return;
+    if (MaxSecondLevelModelCount == 0) return;
 
     // ensure that there is at least MinAvgDatapointsPerModel datapoints per
     // model on average to not waste space/resources
-    second_level_models = decltype(second_level_models)(std::min(
-        MaxSecondLevelModelCount, sample_size / MinAvgDatapointsPerModel));
+    const auto second_level_model_cnt = std::min(
+        MaxSecondLevelModelCount, sample_size / MinAvgDatapointsPerModel);
+    second_level_models = decltype(second_level_models)(second_level_model_cnt);
 
     if (faster_construction) {
       // convenience function for training (code deduplication)
@@ -294,9 +291,9 @@ public:
         }
 
         // Add datapoint at the end of the bucket
-        bucket.push_back(
-            Datapoint(key, static_cast<Precision>(i) /
-                               static_cast<Precision>(sample_size)));
+        bucket.push_back(Datapoint(
+            key,
+            static_cast<Precision>(i) / static_cast<Precision>(sample_size)));
       }
 
       // Edge case: First model does not have enough training data -> add
@@ -345,11 +342,11 @@ public:
    */
   template <class Result = size_t>
   forceinline Result operator()(const Key &key) const {
-    if (MaxSecondLevelModelCount == 0)
-      return root_model(key, max_output);
+    if (MaxSecondLevelModelCount == 0) return root_model(key, max_output);
 
     const auto second_level_index =
         root_model(key, second_level_models.size() - 1);
+    assert(second_level_index < second_level_models.size());
     const auto result =
         second_level_models[second_level_index](key, max_output);
 
@@ -358,14 +355,12 @@ public:
   }
 
   bool operator==(const RMIHash &other) const {
-    if (other.root_model != root_model)
-      return false;
+    if (other.root_model != root_model) return false;
     if (other.second_level_models.size() != second_level_models.size())
       return false;
 
     for (size_t i = 0; i < second_level_models.size(); i++)
-      if (other.second_level_models[i] != second_level_models[i])
-        return false;
+      if (other.second_level_models[i] != second_level_models[i]) return false;
 
     return true;
   }
@@ -393,7 +388,7 @@ class MonotoneRMIHash {
   /// output range is scaled from [0, 1] to [0, max_output] = [0, full_size)
   size_t full_size = 0;
 
-public:
+ public:
   /**
    * Constructs an empty, untrained RMI. to train, manually
    * train by invoking the train() function
@@ -426,8 +421,7 @@ public:
              const size_t full_size) {
     this->full_size = full_size;
     const size_t sample_size = std::distance(sample_begin, sample_end);
-    if (sample_size == 0)
-      return;
+    if (sample_size == 0) return;
 
     // train root model
     root_model = decltype(root_model)(sample_begin, sample_end, 0,
@@ -437,8 +431,7 @@ public:
     assert(root_model.normalized(*(sample_end - 1)) >= 0.9999);
 
     // special case: single level model
-    if (MaxSecondLevelModelCount == 0)
-      return;
+    if (MaxSecondLevelModelCount == 0) return;
 
     // ensure that there is at least MinAvgDatapointsPerModel datapoints per
     // model on average to not waste space/resources
@@ -449,15 +442,13 @@ public:
     // i such that monotony is retained even for non-keys that fit in between
     // actual keys present in the dataset
     const auto true_min_x = [&](const size_t i) {
-      if (i == 0)
-        return *sample_begin;
+      if (i == 0) return *sample_begin;
       return root_model.normalized_inverse(
           static_cast<double>(i) /
           static_cast<double>(second_level_models.size()));
     };
     const auto true_min_y = [&](const size_t i, const size_t i_min_x) {
-      if (i == 0)
-        return 0.0;
+      if (i == 0) return 0.0;
       const auto prev_max_y = second_level_models[i - 1].normalized(i_min_x);
       return prev_max_y;
     };
@@ -515,8 +506,7 @@ public:
    */
   template <class Result = size_t>
   forceinline Result operator()(const Key &key) const {
-    if (MaxSecondLevelModelCount == 0)
-      return root_model(key, full_size);
+    if (MaxSecondLevelModelCount == 0) return root_model(key, full_size);
 
     const size_t second_level_index =
         root_model.normalized(key) * second_level_models.size();
@@ -530,4 +520,4 @@ public:
     return res - ((res >= full_size) & 0x1);
   }
 };
-} // namespace learned_hashing
+}  // namespace learned_hashing

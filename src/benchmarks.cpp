@@ -19,7 +19,7 @@ const std::vector<std::int64_t> datasets{
     static_cast<std::underlying_type_t<dataset::ID>>(dataset::ID::FB),
     static_cast<std::underlying_type_t<dataset::ID>>(dataset::ID::OSM),
     static_cast<std::underlying_type_t<dataset::ID>>(dataset::ID::WIKI)};
-const std::vector<std::int64_t> sample_sizes{0, 10, 50, 100};
+const std::vector<std::int64_t> sample_sizes{1, 10, 50, 100};
 
 template <class Hashfn>
 static void BM_build_and_throughput(benchmark::State& state) {
