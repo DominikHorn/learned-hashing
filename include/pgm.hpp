@@ -8,17 +8,17 @@
 
 namespace learned_hashing {
 
-template <typename T, size_t Epsilon, size_t EpsilonRecursive,
+template <typename T, size_t Epsilon, size_t EpsilonRecursive = Epsilon,
           const size_t MaxModels = std::numeric_limits<size_t>::max(),
           typename Floating = float>
 struct PGMHash {
-private:
+ private:
   pgm::PGMIndex<T, Epsilon, EpsilonRecursive, Floating> pgm_;
 
   T first_key_;
   double scale_fac_;
 
-public:
+ public:
   /**
    * Constructor that produces null PGMHash.
    * Use `fit()` to initialize.
@@ -116,4 +116,4 @@ public:
     // return global_pos;
   }
 };
-} // namespace learned_hashing
+}  // namespace learned_hashing
