@@ -101,7 +101,8 @@ enum class ID {
   FB = 3,
   OSM = 4,
   WIKI = 5,
-  NORMAL = 6
+  NORMAL = 6,
+  BOOKS = 7
 };
 
 inline std::string name(ID id) {
@@ -120,6 +121,8 @@ inline std::string name(ID id) {
       return "osm";
     case ID::WIKI:
       return "wiki";
+    case ID::BOOKS:
+      return "books";
   }
   return "unnamed";
 };
@@ -133,7 +136,7 @@ std::vector<Data> load_cached(ID id, size_t dataset_size) {
       datasets;
 
   // cache sosd dataset files to avoid expensive load operations
-  static std::vector<Data> ds_fb, ds_osm, ds_wiki;
+  static std::vector<Data> ds_fb, ds_osm, ds_wiki, ds_books;
 
   // return cached (if available)
   const auto id_it = datasets.find(id);
@@ -221,6 +224,19 @@ std::vector<Data> load_cached(ID id, size_t dataset_size) {
       // sampling this way is only valid since ds_wiki is shuffled!
       for (size_t i = 0; i < ds_wiki.size() && i < ds.size(); i++)
         ds[i] = ds_wiki[i];
+      break;
+    }
+    case ID::BOOKS: {
+      if (ds_books.empty()) {
+        ds_books = load<Data>("data/books_200M_uint64");
+        std::shuffle(ds_books.begin(), ds_books.end(), rng);
+      }
+      // ds file does not exist
+      if (ds_books.empty()) return {};
+
+      // sampling this way is only valid since ds_wiki is shuffled!
+      for (size_t i = 0; i < ds_books.size() && i < ds.size(); i++)
+        ds[i] = ds_books[i];
       break;
     }
     default:
