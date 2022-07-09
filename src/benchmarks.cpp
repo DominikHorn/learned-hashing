@@ -116,11 +116,14 @@ static void BM_scattering(benchmark::State& state) {
                           sizeof(typename decltype(dataset)::value_type));
 }
 
-#define BM(Hashfn)                                                  \
-  BENCHMARK_TEMPLATE(BM_build_and_throughput, Hashfn)               \
-      ->ArgsProduct({throughput_ds_sizes, datasets, sample_sizes}); \
-  BENCHMARK_TEMPLATE(BM_scattering, Hashfn)                         \
-      ->ArgsProduct({scattering_ds_sizes, datasets, sample_sizes});
+#define BM(Hashfn)                                                 \
+  BENCHMARK_TEMPLATE(BM_build_and_throughput, Hashfn)              \
+      ->ArgsProduct({throughput_ds_sizes, datasets, sample_sizes}) \
+      ->Iterations(5)                                              \
+      ->Repetitions(5);                                            \
+  BENCHMARK_TEMPLATE(BM_scattering, Hashfn)                        \
+      ->ArgsProduct({scattering_ds_sizes, datasets, sample_sizes}) \
+      ->Iterations(1);
 
 #define SINGLE_ARG(...) __VA_ARGS__
 
