@@ -127,7 +127,7 @@ static void BM_scattering(benchmark::State& state) {
   std::array<size_t, N> buckets;
   std::fill(buckets.begin(), buckets.end(), 0);
 
-  const Hashfn hashfn(sample.begin(), sample.end(), N);
+  const Hashfn hashfn(sample.begin(), sample.end(), N - 1);
 
   for (auto _ : state) {
     for (const auto& key : dataset) {
