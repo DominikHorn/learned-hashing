@@ -130,7 +130,8 @@ static void BM_scattering(benchmark::State& state) {
   for (auto _ : state) {
     for (const auto& key : dataset) {
       const auto pred_rank = hashfn(key);
-      buckets[pred_rank]++;
+      const auto rank = std::min(pred_rank, buckets.size() - 1);
+      buckets[rank]++;
     }
   }
 
