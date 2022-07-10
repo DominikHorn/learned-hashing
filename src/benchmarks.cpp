@@ -96,10 +96,8 @@ static void BM_build_and_throughput(benchmark::State& state) {
 
   state.SetLabel(Hashfn::name() + ":" + dataset::name(ds_id));
 
-  state.SetItemsProcessed(dataset.size() *
-                          static_cast<size_t>(state.iterations()));
-  state.SetBytesProcessed(dataset.size() *
-                          static_cast<size_t>(state.iterations()) *
+  state.SetItemsProcessed(static_cast<size_t>(state.iterations()));
+  state.SetBytesProcessed(static_cast<size_t>(state.iterations()) *
                           sizeof(typename decltype(dataset)::value_type));
 }
 
