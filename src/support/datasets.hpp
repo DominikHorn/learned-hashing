@@ -146,31 +146,32 @@ std::vector<Data> load_cached(ID id, size_t dataset_size) {
   }
 
   // generate (or random sample) in appropriate size
-  std::vector<Data> ds(dataset_size, 0);
+  std::vector<Data> ds;
+  ds.reserve(dataset_size);
   switch (id) {
     case ID::SEQUENTIAL: {
-      for (size_t i = 0; i < ds.size(); i++) ds[i] = i + 20000;
+      for (size_t i = 0; i < dataset_size; i++) ds.push_back(i + 20000);
       break;
     }
     case ID::GAPPED_10: {
       std::uniform_int_distribution<size_t> dist(0, 99999);
-      for (size_t i = 0, num = 0; i < ds.size(); i++) {
+      for (size_t i = 0, num = 0; i < dataset_size; i++) {
         do num++;
         while (dist(rng) < 10000);
-        ds[i] = num;
+        ds.push_back(num);
       }
       break;
     }
     case ID::UNIFORM: {
       std::uniform_int_distribution<Data> dist(0, (0x1LLU << 50) - 1);
-      for (size_t i = 0; i < ds.size(); i++) ds[i] = dist(rng);
+      for (size_t i = 0; i < dataset_size; i++) ds.push_back(dist(rng));
       break;
     }
     case ID::NORMAL: {
       const auto mean = 100.0;
       const auto std_dev = 20.0;
       std::normal_distribution<> dist(mean, std_dev);
-      for (size_t i = 0; i < ds.size(); i++) {
+      for (size_t i = 0; i < dataset_size; i++) {
         // cutoff after 3 * std_dev
         const auto rand_val = std::max(mean - 3 * std_dev,
                                        std::min(mean + 3 * std_dev, dist(rng)));
@@ -183,7 +184,7 @@ std::vector<Data> load_cached(ID id, size_t dataset_size) {
             (rand_val - (mean - 3 * std_dev)) * std::pow(2, 50);
 
         // round
-        ds[i] = std::floor(rescaled);
+        ds.push_back(std::floor(rescaled));
       }
       break;
     }
@@ -196,8 +197,8 @@ std::vector<Data> load_cached(ID id, size_t dataset_size) {
       if (ds_fb.empty()) return {};
 
       // sampling this way is only valid since ds_fb is shuffled!
-      for (size_t i = 0; i < ds_fb.size() && i < ds.size(); i++)
-        ds[i] = ds_fb[i];
+      for (size_t i = 0; i < ds_fb.size() && i < dataset_size; i++)
+        ds.push_back(ds_fb[i]);
       break;
     }
     case ID::OSM: {
@@ -209,8 +210,8 @@ std::vector<Data> load_cached(ID id, size_t dataset_size) {
       if (ds_osm.empty()) return {};
 
       // sampling this way is only valid since ds_osm is shuffled!
-      for (size_t i = 0; i < ds_osm.size() && i < ds.size(); i++)
-        ds[i] = ds_osm[i];
+      for (size_t i = 0; i < ds_osm.size() && i < dataset_size; i++)
+        ds.push_back(ds_osm[i]);
       break;
     }
     case ID::WIKI: {
@@ -222,8 +223,8 @@ std::vector<Data> load_cached(ID id, size_t dataset_size) {
       if (ds_wiki.empty()) return {};
 
       // sampling this way is only valid since ds_wiki is shuffled!
-      for (size_t i = 0; i < ds_wiki.size() && i < ds.size(); i++)
-        ds[i] = ds_wiki[i];
+      for (size_t i = 0; i < ds_wiki.size() && i < dataset_size; i++)
+        ds.push_back(ds_wiki[i]);
       break;
     }
     case ID::BOOKS: {
@@ -235,8 +236,8 @@ std::vector<Data> load_cached(ID id, size_t dataset_size) {
       if (ds_books.empty()) return {};
 
       // sampling this way is only valid since ds_wiki is shuffled!
-      for (size_t i = 0; i < ds_books.size() && i < ds.size(); i++)
-        ds[i] = ds_books[i];
+      for (size_t i = 0; i < ds_books.size() && i < dataset_size; i++)
+        ds.push_back(ds_books[i]);
       break;
     }
     default:
