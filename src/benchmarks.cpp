@@ -125,7 +125,7 @@ static void BM_scattering(benchmark::State& state) {
   std::array<size_t, N> buckets;
   std::fill(buckets.begin(), buckets.end(), 0);
 
-  const Hashfn hashfn(sample.begin(), sample.end(), N - 1);
+  const Hashfn hashfn(sample.begin(), sample.end(), N);
 
   for (auto _ : state) {
     for (const auto& key : dataset) {
@@ -150,14 +150,14 @@ static void BM_scattering(benchmark::State& state) {
 }
 
 #define BM(Hashfn)                                                            \
+  BENCHMARK_TEMPLATE(BM_scattering, Hashfn)                                   \
+      ->ArgsProduct({scattering_ds_sizes, datasets, sample_sizes})            \
+      ->Iterations(1);                                                        \
   BENCHMARK_TEMPLATE(BM_build_and_throughput, Hashfn)                         \
       ->ArgsProduct(                                                          \
           {throughput_ds_sizes, datasets, sample_sizes, probe_distributions}) \
       ->Iterations(50000000)                                                  \
-      ->Repetitions(3);                                                       \
-  BENCHMARK_TEMPLATE(BM_scattering, Hashfn)                                   \
-      ->ArgsProduct({scattering_ds_sizes, datasets, sample_sizes})            \
-      ->Iterations(1);
+      ->Repetitions(3);
 
 #define SINGLE_ARG(...) __VA_ARGS__
 
@@ -188,13 +188,13 @@ BENCHMARK_TEMPLATE(BM_build_and_throughput, DoNothing<Data>)
     ->Iterations(50000000)
     ->Repetitions(3);
 
-BM(SINGLE_ARG(learned_hashing::PGMHash<std::uint64_t, 4>));
-BM(SINGLE_ARG(learned_hashing::PGMHash<std::uint64_t, 16>));
-BM(SINGLE_ARG(learned_hashing::PGMHash<std::uint64_t, 128>));
-
 BM(SINGLE_ARG(learned_hashing::RMIHash<std::uint64_t, 1'000'000>));
 BM(SINGLE_ARG(learned_hashing::RMIHash<std::uint64_t, 10'000>));
 BM(SINGLE_ARG(learned_hashing::RMIHash<std::uint64_t, 100>));
+
+BM(SINGLE_ARG(learned_hashing::PGMHash<std::uint64_t, 4>));
+BM(SINGLE_ARG(learned_hashing::PGMHash<std::uint64_t, 16>));
+BM(SINGLE_ARG(learned_hashing::PGMHash<std::uint64_t, 128>));
 
 BM(SINGLE_ARG(learned_hashing::CHTHash<std::uint64_t, 4>));
 BM(SINGLE_ARG(learned_hashing::CHTHash<std::uint64_t, 16>));
