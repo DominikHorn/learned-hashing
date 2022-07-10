@@ -25,7 +25,7 @@ const std::vector<std::int64_t> probe_distributions{
         dataset::ProbingDistribution::UNIFORM),
     static_cast<std::underlying_type_t<dataset::ProbingDistribution>>(
         dataset::ProbingDistribution::EXPONENTIAL)};
-const std::vector<std::int64_t> sample_sizes{1, 10, 100};
+const std::vector<std::int64_t> sample_sizes{1, 100};
 
 template <class Hashfn>
 static void BM_build_and_throughput(benchmark::State& state) {
