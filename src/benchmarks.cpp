@@ -94,6 +94,9 @@ static void BM_build_and_throughput(benchmark::State& state) {
   state.counters["dataset_size"] = dataset.size();
   state.counters["sample_size"] = sample_size;
 
+  state.counters["hashfn_byte_size"] = hashfn.byte_size();
+  state.counters["hashfn_model_count"] = hashfn.model_count();
+
   state.SetLabel(Hashfn::name() + ":" + dataset::name(ds_id));
 
   state.SetItemsProcessed(static_cast<size_t>(state.iterations()));
@@ -140,6 +143,8 @@ static void BM_scattering(benchmark::State& state) {
 
   state.counters["dataset_size"] = dataset.size();
   state.counters["sample_size"] = sample_size;
+  state.counters["hashfn_byte_size"] = hashfn.byte_size();
+  state.counters["hashfn_model_count"] = hashfn.model_count();
 
   state.SetLabel(Hashfn::name() + ":" + dataset::name(ds_id));
 
