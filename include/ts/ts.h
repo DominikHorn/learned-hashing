@@ -5,8 +5,8 @@
 #include <cmath>
 #include <vector>
 
-#include "ts_cht/cht.h"
 #include "common.h"
+#include "ts_cht/cht.h"
 
 namespace ts {
 // Approximates a cumulative distribution function (CDF) using spline
@@ -16,9 +16,8 @@ class TrieSpline {
  public:
   TrieSpline() = default;
 
-  TrieSpline(KeyType min_key, KeyType max_key,
-             size_t num_keys, size_t spline_max_error,
-             ts_cht::CompactHistTree<KeyType> cht,
+  TrieSpline(KeyType min_key, KeyType max_key, size_t num_keys,
+             size_t spline_max_error, ts_cht::CompactHistTree<KeyType> cht,
              std::vector<ts::Coord<KeyType>> spline_points)
       : min_key_(min_key),
         max_key_(max_key),
@@ -95,9 +94,10 @@ class TrieSpline {
   KeyType max_key_;
   size_t num_keys_;
   size_t spline_max_error_;
-
-  std::vector<ts::Coord<KeyType>> spline_points_;
   ts_cht::CompactHistTree<KeyType> cht_;
+
+ public:
+  std::vector<ts::Coord<KeyType>> spline_points_;
 };
 
 }  // namespace ts

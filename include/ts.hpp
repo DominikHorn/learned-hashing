@@ -1,12 +1,12 @@
 #pragma once
 
 #include "convenience/builtins.hpp"
-
 #include "ts/builder.h"
 #include "ts/ts.h"
 
 namespace learned_hashing {
-template <class Data, size_t max_error = 16> class TrieSplineHash {
+template <class Data, size_t max_error = 16>
+class TrieSplineHash {
   /// output range is scaled from [0, sample_size) to [0, full_size) via this
   /// factor
   double _out_scale_fac;
@@ -14,7 +14,7 @@ template <class Data, size_t max_error = 16> class TrieSplineHash {
   /// internal trie spline model, possibly trained on sample
   ts::TrieSpline<Data> _spline;
 
-public:
+ public:
   TrieSplineHash() noexcept = default;
 
   template <class RandomIt>
@@ -36,8 +36,7 @@ public:
     const Data min = *sample_begin;
     const Data max = *(sample_end - 1);
     ts::Builder<Data> tsb(min, max, max_error);
-    for (auto it = sample_begin; it < sample_end; it++)
-      tsb.AddKey(*it);
+    for (auto it = sample_begin; it < sample_end; it++) tsb.AddKey(*it);
 
     // actually build radix spline
     _spline = tsb.Finalize();
@@ -57,4 +56,4 @@ public:
     return "trie_spline_err" + std::to_string(max_error);
   }
 };
-} // namespace learned_hashing
+}  // namespace learned_hashing
