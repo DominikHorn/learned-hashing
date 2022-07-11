@@ -332,7 +332,7 @@ class RMIHash {
            sizeof(SecondLevelModel) * second_level_models.size();
   }
 
-  size_t model_count() { return 1 + second_level_models.size(); }
+  size_t model_count() const { return 1 + second_level_models.size(); }
 
   /**
    * Compute hash value for key
