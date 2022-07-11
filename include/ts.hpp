@@ -46,7 +46,7 @@ class TrieSplineHash {
     return _spline.GetEstimatedPosition(key) * _out_scale_fac;
   }
 
-  size_t model_count() const { return _spline.spline_points_.size(); }
+  size_t model_count() const { return _spline.SplinePointsCount(); }
 
   size_t byte_size() const {
     return sizeof(decltype(_out_scale_fac)) + _spline.GetSize();

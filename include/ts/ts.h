@@ -65,6 +65,8 @@ class TrieSpline {
            spline_points_.size() * sizeof(Coord<KeyType>);
   }
 
+  size_t SplinePointsCount() const { return spline_points_.size(); }
+
  private:
   // Returns the index of the spline point that marks the end of the spline
   // segment that contains the `key`: `key` ∈ (spline[index - 1], spline[index]]
@@ -94,10 +96,9 @@ class TrieSpline {
   KeyType max_key_;
   size_t num_keys_;
   size_t spline_max_error_;
-  ts_cht::CompactHistTree<KeyType> cht_;
 
- public:
   std::vector<ts::Coord<KeyType>> spline_points_;
+  ts_cht::CompactHistTree<KeyType> cht_;
 };
 
 }  // namespace ts
