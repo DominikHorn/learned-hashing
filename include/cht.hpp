@@ -1,9 +1,8 @@
 #pragma once
 
-#include "convenience/builtins.hpp"
-
 #include "cht/builder.h"
 #include "cht/cht.h"
+#include "convenience/builtins.hpp"
 #include "include/convenience/bounds.hpp"
 
 namespace learned_hashing {
@@ -16,7 +15,7 @@ class CHTHash {
   /// underlying model
   cht::CompactHistTree<Data> _cht;
 
-public:
+ public:
   CHTHash() noexcept = default;
 
   template <class RandomIt>
@@ -38,8 +37,7 @@ public:
     const auto min = *sample_begin;
     const auto max = *(sample_end - 1);
     cht::Builder<Data> chsb(min, max, num_bins, max_error);
-    for (auto it = sample_begin; it < sample_end; it++)
-      chsb.AddKey(*it);
+    for (auto it = sample_begin; it < sample_end; it++) chsb.AddKey(*it);
 
     // actually build cht
     _cht = chsb.Finalize();
@@ -55,10 +53,12 @@ public:
 
   size_t model_size() const { return _cht.GetSize(); }
 
+  size_t model_count() const { return _cht.GetTableSize(); }
+
   size_t byte_size() const { return sizeof(decltype(*this)) + model_size(); }
 
   static std::string name() {
     return "cht_" + std::to_string(num_bins) + "_" + std::to_string(max_error);
   }
 };
-} // namespace learned_hashing
+}  // namespace learned_hashing
