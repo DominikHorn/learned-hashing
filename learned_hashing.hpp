@@ -1,6 +1,7 @@
 #pragma once
 
 #include "include/cht.hpp"
+#include "include/dynamic-pgm.hpp"
 #include "include/pgm.hpp"
 #include "include/rmi.hpp"
 #include "include/rs.hpp"
