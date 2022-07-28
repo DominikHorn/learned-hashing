@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <pgm/pgm_index.hpp>
 #include <pgm/pgm_index_dynamic.hpp>
@@ -15,11 +16,8 @@ template <typename T, size_t Epsilon, size_t EpsilonRecursive = Epsilon,
 struct DynamicPGMHash {
  private:
   using PGM_T = pgm::DynamicPGMIndex<
-      T, size_t, pgm::PGMIndex<T, Epsilon, EpsilonRecursive, Floating>>;
+      T, std::uint8_t, pgm::PGMIndex<T, Epsilon, EpsilonRecursive, Floating>>;
   std::unique_ptr<PGM_T> pgm_ptr_;
-
-  T first_key_;
-  double scale_fac_;
 
  public:
   /**
@@ -33,38 +31,28 @@ struct DynamicPGMHash {
    * Constructs based on the sorted keys in the range [first, last). Note that
    * contrary to PGMIndex, a sample of the keys suffices.
    *
-   * @param sample_begin, sample_end the range containing the sorted (!) keys to
+   * @param keys_begin, keys_end the range containing the sorted (!) keys to
    * be indexed
-   * @param full_size the output range of the hash function [0, full_size)
    */
   template <typename RandomIt>
-  DynamicPGMHash(const RandomIt &sample_begin, const RandomIt &sample_end,
-                 const size_t full_size) {
-    train(sample_begin, sample_end, full_size);
+  DynamicPGMHash(const RandomIt &keys_begin, const RandomIt &keys_end) {
+    train(keys_begin, keys_end);
   }
 
   /**
    * Fits this PGMHash instance to a certain data distribution based on a
   sample.
    *
-   * @param sample_begin iterator to first element of the sample
-   * @param sample_end past the end iterator for sample
-   * @param full_size actual full dataset size
+   * @param keys_begin iterator to first key
+   * @param keys_end past the end iterator for keys
    */
   template <class RandomIt>
-  void train(const RandomIt &sample_begin, const RandomIt &sample_end,
-             const size_t full_size) {
-    const auto sample_size = std::distance(sample_begin, sample_end);
+  void train(const RandomIt &keys_begin, const RandomIt &keys_end) {
+    const auto N = std::distance(keys_begin, keys_end);
 
-    first_key_ = *sample_begin;
-    scale_fac_ =
-        static_cast<double>(full_size) / static_cast<double>(sample_size);
-
-    std::vector<std::pair<T, size_t>> data;
-    data.resize(sample_size);
-    size_t i = 0;
-    for (auto it = sample_begin; it < sample_end; it++)
-      data.emplace_back(*it, i++);
+    std::vector<std::pair<T, std::uint8_t>> data;
+    data.resize(N);
+    for (auto it = keys_begin; it < keys_end; it++) data.emplace_back(*it, 0);
 
     pgm_ptr_ = std::make_unique<PGM_T>(data.begin(), data.end());
   }
@@ -108,9 +96,10 @@ struct DynamicPGMHash {
    */
   template <typename Result = size_t, typename Precision = double>
   forceinline Result operator()(const T &key) const {
-    const auto it = pgm_ptr_->lower_bound(key);
-
-    return std::distance(pgm_ptr_->begin(), it);
+    return std::distance(pgm_ptr_->begin(), pgm_ptr_->lower_bound(key));
   }
+
+  /// inserts a new key
+  void insert(const T &key) { pgm_ptr_->insert_or_assign(key, 0); }
 };
 }  // namespace learned_hashing

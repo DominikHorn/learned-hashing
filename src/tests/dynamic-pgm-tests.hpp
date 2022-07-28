@@ -23,8 +23,8 @@ TEST(DynamicPGM, IsMonotoneForNonKeys) {
 
   for (const auto &dataset : datasets) {
     // build monotone ts model
-    const learned_hashing::DynamicPGMHash<Data, 4, 1> pgm(
-        dataset.begin(), dataset.end(), dataset.size());
+    const learned_hashing::DynamicPGMHash<Data, 4, 1> pgm(dataset.begin(),
+                                                          dataset.end());
 
     // test monotony
     size_t last_i = 0;
