@@ -110,7 +110,7 @@ struct PGMHash {
       return std::numeric_limits<T>::max();
     }
 
-    return static_cast<Result>(scale_fac_ * pgm_.search(key).pos);
+    return static_cast<Result>(scale_fac_ * pgm_.get_pos(key));
   }
 };
 }  // namespace learned_hashing
