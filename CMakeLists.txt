@@ -12,12 +12,13 @@ target_sources(${PROJECT_NAME} INTERFACE learned_hashing.hpp include/)
 target_include_directories(${PROJECT_NAME} INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
-# Enable OpenMP if available
-include(CheckCXXCompilerFlag)
-check_cxx_compiler_flag(-fopenmp HAS_OPENMP)
-if (HAS_OPENMP)
-  target_compile_options(${PROJECT_NAME} INTERFACE -fopenmp)
-endif()
+# OpenMP causes compilation issues; Disable for now
+# # Enable OpenMP if available
+# include(CheckCXXCompilerFlag)
+# check_cxx_compiler_flag(-fopenmp HAS_OPENMP)
+# if (HAS_OPENMP)
+#   target_compile_options(${PROJECT_NAME} INTERFACE -fopenmp)
+# endif()
 
 # ==== Dependencies ====
 include(FetchContent)

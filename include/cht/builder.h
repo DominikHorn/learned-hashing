@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <functional>
 #include <iostream>
 #include <limits>
 
@@ -11,16 +12,22 @@
 namespace cht {
 
 // Allows building a `CompactHistTree` in a single pass over sorted data.
-template <class KeyType> class Builder {
-public:
+template <class KeyType>
+class Builder {
+ public:
   // The cache-oblivious structure makes sense when the tree becomes deep
   // (`numBins` or `maxError` become small)
   Builder(KeyType min_key, KeyType max_key, size_t num_bins, size_t max_error,
           bool single_pass = false, bool use_cache = false)
-      : min_key_(min_key), max_key_(max_key), num_bins_(num_bins),
+      : min_key_(min_key),
+        max_key_(max_key),
+        num_bins_(num_bins),
         log_num_bins_(computeLog(static_cast<uint64_t>(num_bins_))),
-        max_error_(max_error), single_pass_(use_cache ? false : single_pass),
-        use_cache_(use_cache), curr_num_keys_(0), prev_key_(min_key) {
+        max_error_(max_error),
+        single_pass_(use_cache ? false : single_pass),
+        use_cache_(use_cache),
+        curr_num_keys_(0),
+        prev_key_(min_key) {
     assert((num_bins_ & (num_bins_ - 1)) == 0);
     // Compute the logarithm in base 2 of the range.
     auto lg = computeLog(max_key_ - min_key_, true);
@@ -72,7 +79,7 @@ public:
                                     shift_, std::move(table_));
   }
 
-private:
+ private:
   static constexpr unsigned Infinity = std::numeric_limits<unsigned>::max();
   static constexpr unsigned Leaf = (1u << 31);
   static constexpr unsigned Mask = Leaf - 1;
@@ -449,4 +456,4 @@ private:
   std::vector<std::pair<Info, std::vector<Range>>> tree_;
 };
 
-} // namespace cht
+}  // namespace cht

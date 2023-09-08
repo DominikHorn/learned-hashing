@@ -17,21 +17,11 @@ else()
 endif()
 
 # ==== Test target ====
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/96f4ce02a3a78d63981c67acbd368945d11d7d70.zip
-  )
+set(TEST_TARGET lh_tests)
+add_executable(${TEST_TARGET} tests.cpp)
 
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-add_executable(lh_tests tests.cpp)
-target_link_libraries(lh_tests learned-hashing gtest_main)
-
-# enable ctest support (i.e., test discovery)
-include(GoogleTest)
-gtest_discover_tests(lh_tests)
+include(${PROJECT_SOURCE_DIR}/thirdparty/googletest.cmake)
+target_link_libraries(${TEST_TARGET} PRIVATE ${PROJECT_NAME} ${COMPETITORS_LIBRARY} ${GOOGLETEST_LIBRARY})
 
 # ==== Benchmark executable ====
 add_executable(lh_benchmarks benchmarks.cpp)
@@ -39,4 +29,4 @@ target_link_libraries(lh_benchmarks PRIVATE learned-hashing ${GOOGLEBENCHMARK_LI
 
 # ==== Function Stats executable ====
 add_executable(lh_stats stats.cpp)
-target_link_libraries(lh_stats PRIVATE learned-hashing)
+target_link_libraries(lh_stats PRIVATE learned-hashing ${GOOGLETEST_LIBRARY})
